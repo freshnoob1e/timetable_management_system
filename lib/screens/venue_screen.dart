@@ -1,32 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:timetable_management_system/model/lecturer.dart';
-import 'package:timetable_management_system/repository/lecturer_repository.dart';
+import 'package:timetable_management_system/model/venue.dart';
+import 'package:timetable_management_system/repository/venue_repository.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
+import 'package:timetable_management_system/utility/venue_type.dart';
 
-class LecturerScreen extends StatefulWidget {
-  const LecturerScreen({super.key});
+class VenueScreen extends StatefulWidget {
+  const VenueScreen({super.key});
 
   @override
-  State<LecturerScreen> createState() => _LecturerScreenState();
+  State<VenueScreen> createState() => _VenueScreenState();
 }
 
-class _LecturerScreenState extends State<LecturerScreen> {
-  final GlobalKey<FormState> _newLecturerFormKey = GlobalKey<FormState>();
-  final newLectNameController = TextEditingController();
+class _VenueScreenState extends State<VenueScreen> {
+  final GlobalKey<FormState> _newVenueFormKey = GlobalKey<FormState>();
+  final newVenueNameController = TextEditingController();
+  final newVenueCapacityController = TextEditingController();
+  int newVenueType = 0;
 
   @override
   void dispose() {
-    newLectNameController.dispose();
+    newVenueNameController.dispose();
+    newVenueCapacityController.dispose();
     super.dispose();
   }
 
-  List<Widget> newLectDialogForm() {
+  List<Widget> newVenueDialogForm() {
     return [
-      // Lecturer's name
+      // Venue's name
       TextFormField(
-        controller: newLectNameController,
+        controller: newVenueNameController,
         decoration: const InputDecoration(
-          hintText: "Lecturer's name (e.x. Mr Thomas Tan Ah Kao)",
+          hintText: "Venue's name (e.x. D101)",
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -35,23 +39,59 @@ class _LecturerScreenState extends State<LecturerScreen> {
           return null;
         },
       ),
+      TextFormField(
+        controller: newVenueCapacityController,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(
+          hintText: "Venue's capacity (e.x. 40)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return null;
+          }
+          if (int.tryParse(value) == null) {
+            return "Please enter a valid number";
+          }
+          return null;
+        },
+      ),
+      DropdownButtonFormField(
+        value: 0,
+        items: VenueType.values.map((e) {
+          return DropdownMenuItem(
+            value: e.index,
+            child: Text(e.name),
+          );
+        }).toList(),
+        onChanged: (int? value) {
+          if (value != null) {
+            newVenueType = value;
+          }
+        },
+      ),
     ];
   }
 
-  Future addLecturer() async {
-    if (!_newLecturerFormKey.currentState!.validate()) return;
-
+  Future<void> addVenue() async {
+    if (!_newVenueFormKey.currentState!.validate()) return;
     final navigator = Navigator.of(context);
-    await LecturerRepository.insertLecturer(
-      Lecturer(null, newLectNameController.text),
+    await VenueRepository.insertVenue(
+      Venue(
+        null,
+        newVenueNameController.text,
+        int.tryParse(newVenueCapacityController.text),
+        VenueType.values[newVenueType],
+      ),
     );
     setState(() {});
     navigator.pop();
-    newLectNameController.clear();
+    newVenueNameController.clear();
+    newVenueCapacityController.clear();
+    newVenueType = 0;
   }
 
-  Future removeLecturer(int lecturerId) async {
-    await LecturerRepository.deleteLecturer(lecturerId);
+  Future<void> removeVenue(int venueId) async {
+    await VenueRepository.deleteVenue(venueId);
     setState(() {});
   }
 
@@ -59,7 +99,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(Strings.lecturerABTitle),
+        title: const Text(Strings.venueABTitle),
       ),
       body: Center(
         child: Column(
@@ -73,14 +113,14 @@ class _LecturerScreenState extends State<LecturerScreen> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           content: Form(
-                            key: _newLecturerFormKey,
+                            key: _newVenueFormKey,
                             child: Column(children: [
-                              ...newLectDialogForm(),
+                              ...newVenueDialogForm(),
                               ElevatedButton(
                                 onPressed: () async {
-                                  await addLecturer();
+                                  await addVenue();
                                 },
-                                child: const Text("Add Lecturer"),
+                                child: const Text("Add Venue"),
                               ),
                             ]),
                           ),
@@ -88,7 +128,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                       },
                     );
                   },
-                  child: const Text("Add New Lecturer"),
+                  child: const Text("Add New Venue"),
                 ),
                 const SizedBox(
                   width: 20,
@@ -120,7 +160,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                     child: SizedBox(
                       height: 600,
                       child: FutureBuilder(
-                        future: LecturerRepository.retrieveLecturers(),
+                        future: VenueRepository.retrieveVenues(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState !=
                               ConnectionState.done) {
@@ -130,7 +170,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                           return ListView.builder(
                             itemCount: snapshot.data!.length,
                             itemBuilder: (context, index) {
-                              Lecturer lect = snapshot.data![index];
+                              Venue venue = snapshot.data![index];
                               return Container(
                                 decoration: index % 2 != 0
                                     ? const BoxDecoration(color: Colors.black12)
@@ -139,7 +179,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("${index + 1}. ${lect.name}"),
+                                    Text("${index + 1}. ${venue.venueName}"),
                                     IconButton(
                                       onPressed: () => showDialog(
                                         context: context,
@@ -176,8 +216,8 @@ class _LecturerScreenState extends State<LecturerScreen> {
                                                     ),
                                                     ElevatedButton(
                                                       onPressed: () {
-                                                        removeLecturer(
-                                                          lect.id!,
+                                                        removeVenue(
+                                                          venue.id!,
                                                         );
                                                         Navigator.pop(context);
                                                       },

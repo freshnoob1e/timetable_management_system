@@ -48,10 +48,10 @@ class Chromosome {
             timeSlot,
             () => {
               "venue": {
-                currentSession.venue.id: [i]
+                currentSession.venue.id!: [i]
               },
               "programme": {
-                currentSession.course.courseCode.id: [i]
+                currentSession.course.courseCode.id!: [i]
               },
               "lecturer": {
                 currentSession.course.lecturer.id!: [i]
@@ -61,13 +61,13 @@ class Chromosome {
         } else {
           // Venue
           List<int> venues = geneSlot[timeSlot]!["venue"]!
-              .putIfAbsent(currentSession.venue.id, () => [i]);
+              .putIfAbsent(currentSession.venue.id!, () => [i]);
           if (!venues.contains(i)) {
             venues.add(i);
           }
           // Programme
           List<int> programmes = geneSlot[timeSlot]!["programme"]!
-              .putIfAbsent(currentSession.course.courseCode.id, () => [i]);
+              .putIfAbsent(currentSession.course.courseCode.id!, () => [i]);
           if (!programmes.contains(i)) {
             programmes.add(i);
           }

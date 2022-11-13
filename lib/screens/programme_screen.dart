@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:timetable_management_system/model/lecturer.dart';
-import 'package:timetable_management_system/repository/lecturer_repository.dart';
+import 'package:timetable_management_system/model/programme.dart';
+import 'package:timetable_management_system/repository/programme_repository.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
-class LecturerScreen extends StatefulWidget {
-  const LecturerScreen({super.key});
+class ProgrammeScreen extends StatefulWidget {
+  const ProgrammeScreen({super.key});
 
   @override
-  State<LecturerScreen> createState() => _LecturerScreenState();
+  State<ProgrammeScreen> createState() => _ProgrammeScreenState();
 }
 
-class _LecturerScreenState extends State<LecturerScreen> {
-  final GlobalKey<FormState> _newLecturerFormKey = GlobalKey<FormState>();
-  final newLectNameController = TextEditingController();
+class _ProgrammeScreenState extends State<ProgrammeScreen> {
+  final GlobalKey<FormState> _newProgrammeFormKey = GlobalKey<FormState>();
+  final newProgCodeController = TextEditingController();
 
   @override
   void dispose() {
-    newLectNameController.dispose();
+    newProgCodeController.dispose();
     super.dispose();
   }
 
-  List<Widget> newLectDialogForm() {
+  List<Widget> newProgDialogForm() {
     return [
-      // Lecturer's name
+      // Programme's code
       TextFormField(
-        controller: newLectNameController,
+        controller: newProgCodeController,
         decoration: const InputDecoration(
-          hintText: "Lecturer's name (e.x. Mr Thomas Tan Ah Kao)",
+          hintText: "Programme's code (e.x. RSDY1S2)",
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return "Please enter a name";
+            return "Please enter a valid code";
           }
           return null;
         },
@@ -38,20 +38,19 @@ class _LecturerScreenState extends State<LecturerScreen> {
     ];
   }
 
-  Future addLecturer() async {
-    if (!_newLecturerFormKey.currentState!.validate()) return;
-
+  Future<void> addProgramme() async {
+    if (!_newProgrammeFormKey.currentState!.validate()) return;
     final navigator = Navigator.of(context);
-    await LecturerRepository.insertLecturer(
-      Lecturer(null, newLectNameController.text),
+    await ProgrammeRepository.insertProgramme(
+      Programme(null, newProgCodeController.text),
     );
     setState(() {});
     navigator.pop();
-    newLectNameController.clear();
+    newProgCodeController.clear();
   }
 
-  Future removeLecturer(int lecturerId) async {
-    await LecturerRepository.deleteLecturer(lecturerId);
+  Future<void> removeProgramme(int progId) async {
+    await ProgrammeRepository.deleteProgramme(progId);
     setState(() {});
   }
 
@@ -59,7 +58,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(Strings.lecturerABTitle),
+        title: const Text(Strings.programmeABTitle),
       ),
       body: Center(
         child: Column(
@@ -73,14 +72,14 @@ class _LecturerScreenState extends State<LecturerScreen> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           content: Form(
-                            key: _newLecturerFormKey,
+                            key: _newProgrammeFormKey,
                             child: Column(children: [
-                              ...newLectDialogForm(),
+                              ...newProgDialogForm(),
                               ElevatedButton(
                                 onPressed: () async {
-                                  await addLecturer();
+                                  await addProgramme();
                                 },
-                                child: const Text("Add Lecturer"),
+                                child: const Text("Add Programme"),
                               ),
                             ]),
                           ),
@@ -88,7 +87,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                       },
                     );
                   },
-                  child: const Text("Add New Lecturer"),
+                  child: const Text("Add New Programme"),
                 ),
                 const SizedBox(
                   width: 20,
@@ -120,7 +119,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                     child: SizedBox(
                       height: 600,
                       child: FutureBuilder(
-                        future: LecturerRepository.retrieveLecturers(),
+                        future: ProgrammeRepository.retrieveProgrammes(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState !=
                               ConnectionState.done) {
@@ -130,7 +129,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                           return ListView.builder(
                             itemCount: snapshot.data!.length,
                             itemBuilder: (context, index) {
-                              Lecturer lect = snapshot.data![index];
+                              Programme prog = snapshot.data![index];
                               return Container(
                                 decoration: index % 2 != 0
                                     ? const BoxDecoration(color: Colors.black12)
@@ -139,7 +138,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("${index + 1}. ${lect.name}"),
+                                    Text("${index + 1}. ${prog.programmeCode}"),
                                     IconButton(
                                       onPressed: () => showDialog(
                                         context: context,
@@ -176,8 +175,8 @@ class _LecturerScreenState extends State<LecturerScreen> {
                                                     ),
                                                     ElevatedButton(
                                                       onPressed: () {
-                                                        removeLecturer(
-                                                          lect.id!,
+                                                        removeProgramme(
+                                                          prog.id!,
                                                         );
                                                         Navigator.pop(context);
                                                       },

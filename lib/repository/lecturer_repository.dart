@@ -1,25 +1,29 @@
 import 'package:flutter/cupertino.dart';
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timetable_management_system/model/lecturer.dart';
+import 'package:timetable_management_system/repository/database_repository.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
 class LecturerRepository {
   static Future<Database> openDB() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    final database = openDatabase(
-      join(await getDatabasesPath(), Strings.databaseName),
-      onCreate: (db, version) {
-        return db.execute(
-            "CREATE TABLE ${Strings.lecturerTableName}(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT)");
-      },
-      version: 1,
+    final database = await DatabaseRepository.openDB();
+
+    // Check if lecturer table exists
+    List table = await database.query(
+      "sqlite_master",
+      where: "name = ?",
+      whereArgs: [Strings.lecturerTableName],
     );
+    if (table.isEmpty) {
+      database.execute(Strings.lecturerTableSQL);
+    }
+
     return database;
   }
 
-  static Future<void> insertLecturer(Lecturer lecturer) async {
+  static Future insertLecturer(Lecturer lecturer) async {
     final db = await openDB();
 
     await db.insert(
@@ -53,7 +57,7 @@ class LecturerRepository {
     return Lecturer(maps[0]['id'], maps[0]['name']);
   }
 
-  static Future<void> updateLecturer(Lecturer lecturer) async {
+  static Future updateLecturer(Lecturer lecturer) async {
     final db = await openDB();
 
     await db.update(
@@ -64,7 +68,7 @@ class LecturerRepository {
     );
   }
 
-  static Future<void> deleteLecturer(int id) async {
+  static Future deleteLecturer(int id) async {
     final db = await openDB();
 
     await db.delete(

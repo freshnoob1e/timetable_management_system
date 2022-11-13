@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:timetable_management_system/screens/course_screen.dart';
 import 'package:timetable_management_system/screens/lecturer_screen.dart';
+import 'package:timetable_management_system/screens/programme_screen.dart';
+import 'package:timetable_management_system/screens/venue_screen.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
 class TimetableScreen extends StatefulWidget {
@@ -42,6 +44,28 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 );
               },
               child: const Text("To lecturer screen"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProgrammeScreen(),
+                  ),
+                );
+              },
+              child: const Text("To programme screen"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VenueScreen(),
+                  ),
+                );
+              },
+              child: const Text("To venue screen"),
             ),
           ],
         ),

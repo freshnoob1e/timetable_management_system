@@ -1,12 +1,21 @@
 import 'package:timetable_management_system/utility/venue_type.dart';
 
 class Venue {
-  int id;
+  int? id;
   String venueName;
   int? venueCapacity;
   VenueType venueType;
 
   Venue(this.id, this.venueName, this.venueCapacity, this.venueType);
+
+  Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "venueName": venueName,
+      "venueCapacity": venueCapacity,
+      "venueType": venueType.index,
+    };
+  }
 
   @override
   String toString() {
