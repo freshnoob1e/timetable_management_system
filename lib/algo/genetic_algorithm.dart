@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:timetable_management_system/algo/chromosome.dart';
 import 'package:timetable_management_system/algo/gene.dart';
 import 'package:timetable_management_system/algo/population.dart';
+import 'package:timetable_management_system/model/class_session.dart';
 
 class GeneticAlgorithm {
   Population population = Population();
@@ -141,5 +142,32 @@ class GeneticAlgorithm {
       print(currentClassRow);
     }
     print("\n\n");
+  }
+
+  List<ClassSession> getChromosomeClassSessions(Chromosome chromosome) {
+    DateTime d = DateTime.now();
+    int thisWeekDayNum = d.weekday;
+    DateTime weekStartDay = d.subtract(Duration(days: thisWeekDayNum - 1));
+    DateTime startHour = DateTime(d.year, d.month, weekStartDay.day, 8);
+    List<ClassSession> classSessions = [];
+
+    for (int i = 0; i < chromosome.genesLength; i++) {
+      List<int> occupiedSlot = chromosome.genes[i].occupiedSlot;
+      int startSlot = occupiedSlot[0];
+      int endSlot = occupiedSlot[occupiedSlot.length - 1];
+
+      DateTime startTime = startHour.add(Duration(minutes: 30 * startSlot));
+      DateTime endTime = startHour.add(Duration(minutes: 30 * (endSlot + 1)));
+
+      classSessions.add(ClassSession(
+        0,
+        population.classSessions[i].course,
+        population.classSessions[i].classType,
+        population.classSessions[i].venue,
+        startTime,
+        endTime,
+      ));
+    }
+    return classSessions;
   }
 }

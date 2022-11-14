@@ -29,13 +29,17 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  calendar_view: ^1.0.0
   cupertino_icons: ^1.0.2
+  data_table_2: ^2.3.8
   flutter:
     sdk: flutter
+  intl: ^0.17.0
   path: ^1.8.2
   sqflite: ^2.2.0+3
   sqflite_common_ffi: ^2.2.0+1
   sqlite3_flutter_libs: ^0.5.11+1
+  time_planner: ^0.1.1
 
 dev_dependencies:
   flutter_lints: ^2.0.0

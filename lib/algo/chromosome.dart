@@ -94,24 +94,6 @@ class Chromosome {
       });
     });
 
-    // for (int i = 0; i < slotLength; i++) {
-    //   for (int x = 0; x < genesLength; x++) {
-    //     for (int y = x + 1; y < genesLength; y++) {
-    //       if (genes[x].slot[i]! && genes[y].slot[i]!) {
-    //         if (classSessions[x].course.lecturer.id ==
-    //                 classSessions[y].course.lecturer.id ||
-    //             classSessions[x].course.courseCode ==
-    //                 classSessions[y].course.courseCode ||
-    //             classSessions[x].venue.venueID ==
-    //                 classSessions[y].venue.venueID) {
-    //           genes[x].hasClash = true;
-    //           genes[y].hasClash = true;
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
     int numOfClashGene = 0;
     for (int i = 0; i < genesLength; i++) {
       if (genes[i].hasClash) {

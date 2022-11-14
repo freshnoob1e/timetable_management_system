@@ -16,6 +16,7 @@ class Population {
   late List<TimeSlot> timeslots;
   int timeslotLength = 0;
   double fittestFitness = 0;
+  Random rm = Random();
 
   // Initialize population
   void initializePopulation(
@@ -26,8 +27,6 @@ class Population {
   ) {
     timeslots = timeslotslist;
     timeslotLength = timeslots.length;
-
-    Random rm = Random();
 
     popSize = populationSize;
 

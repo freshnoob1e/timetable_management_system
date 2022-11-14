@@ -5,6 +5,7 @@ class Strings {
   static const String programmeABTitle = "Programme";
   static const String venueABTitle = "Venue";
   static const String courseABTitle = "Course";
+  static const String manageTimeslotABTitle = "Manage Timeslot";
   static const String databaseName = "timetable_management_system.db";
   static const String lecturerTableName = "lecturers";
   static const String programmeTableName = "programmes";

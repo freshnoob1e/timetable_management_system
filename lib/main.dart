@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timetable_management_system/screens/timetable_screen.dart';
@@ -26,12 +27,15 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return CalendarControllerProvider(
+      controller: EventController(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const TimetableScreen(),
       ),
-      home: const TimetableScreen(),
     );
   }
 }
