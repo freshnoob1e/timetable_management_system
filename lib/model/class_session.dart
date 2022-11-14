@@ -22,7 +22,8 @@ class ClassSession {
   bool isClash(ClassSession targetSession) {
     if (targetSession.course.lecturer.id == course.lecturer.id) {
       return true;
-    } else if (targetSession.course.courseCode.id == course.courseCode.id) {
+    } else if (targetSession.course.programmeCode.id ==
+        course.programmeCode.id) {
       return true;
     } else if (targetSession.venue.id == venue.id) {
       return true;

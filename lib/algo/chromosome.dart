@@ -51,7 +51,7 @@ class Chromosome {
                 currentSession.venue.id!: [i]
               },
               "programme": {
-                currentSession.course.courseCode.id!: [i]
+                currentSession.course.programmeCode.id!: [i]
               },
               "lecturer": {
                 currentSession.course.lecturer.id!: [i]
@@ -67,7 +67,7 @@ class Chromosome {
           }
           // Programme
           List<int> programmes = geneSlot[timeSlot]!["programme"]!
-              .putIfAbsent(currentSession.course.courseCode.id!, () => [i]);
+              .putIfAbsent(currentSession.course.programmeCode.id!, () => [i]);
           if (!programmes.contains(i)) {
             programmes.add(i);
           }

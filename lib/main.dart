@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timetable_management_system/screens/timetable_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:timetable_management_system/utility/class_type.dart';
 
 Future main() async {
   if (Platform.isWindows || Platform.isLinux) {

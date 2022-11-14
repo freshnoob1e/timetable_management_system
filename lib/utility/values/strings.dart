@@ -4,6 +4,7 @@ class Strings {
   static const String lecturerABTitle = "Lecturer";
   static const String programmeABTitle = "Programme";
   static const String venueABTitle = "Venue";
+  static const String courseABTitle = "Course";
   static const String databaseName = "timetable_management_system.db";
   static const String lecturerTableName = "lecturers";
   static const String programmeTableName = "programmes";
@@ -17,4 +18,11 @@ class Strings {
       "CREATE TABLE $lecturerTableName(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL)";
   static const String venueTableSQL =
       "CREATE TABLE $venueTableName(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, venueName TEXT NOT NULL, venueCapacity INTEGER, venueType INTEGER)";
+  static const String courseTableSQL =
+      "CREATE TABLE $courseTableName(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, courseCode TEXT NOT NULL, courseDescription TEXT NOT NULL, lessonsHour JSON NOT NULL, lecturer_id INTEGER, programme_id INTEGER, CONSTRAINT fk_lecturers FOREIGN KEY (lecturer_id) REFERENCES lecturers, CONSTRAINT fk_programmes FOREIGN KEY (programme_id) REFERENCES programmes)";
+  static const String courseTableSelectSQL =
+      "SELECT courses.id, courses.courseCode, courses.courseDescription, courses.lessonsHour, "
+      "lecturers.id AS lecturer_id, lecturers.name AS lecturer_name, "
+      "programmes.id as programme_id, programmes.programmeCode AS programme_code "
+      "FROM $courseTableName INNER JOIN lecturers ON lecturer_id = lecturers.id, programmes on programme_id = programmes.id";
 }
