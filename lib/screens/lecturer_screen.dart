@@ -13,10 +13,13 @@ class LecturerScreen extends StatefulWidget {
 class _LecturerScreenState extends State<LecturerScreen> {
   final GlobalKey<FormState> _newLecturerFormKey = GlobalKey<FormState>();
   final newLectNameController = TextEditingController();
+  final GlobalKey<FormState> _editLecturerFormKey = GlobalKey<FormState>();
+  final editLectNameController = TextEditingController();
 
   @override
   void dispose() {
     newLectNameController.dispose();
+    editLectNameController.dispose();
     super.dispose();
   }
 
@@ -25,6 +28,26 @@ class _LecturerScreenState extends State<LecturerScreen> {
       // Lecturer's name
       TextFormField(
         controller: newLectNameController,
+        decoration: const InputDecoration(
+          hintText: "Lecturer's name (e.x. Mr Thomas Tan Ah Kao)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter a name";
+          }
+          return null;
+        },
+      ),
+    ];
+  }
+
+  Future<List<Widget>> editLectDialogForm(int lectID) async {
+    Lecturer editLect = await LecturerRepository.retrieveLecturerById(lectID);
+    editLectNameController.text = editLect.name;
+    return [
+      // Lecturer's name
+      TextFormField(
+        controller: editLectNameController,
         decoration: const InputDecoration(
           hintText: "Lecturer's name (e.x. Mr Thomas Tan Ah Kao)",
         ),
@@ -48,6 +71,18 @@ class _LecturerScreenState extends State<LecturerScreen> {
     setState(() {});
     navigator.pop();
     newLectNameController.clear();
+  }
+
+  Future updateLecturer(int lectID) async {
+    if (!_editLecturerFormKey.currentState!.validate()) return;
+
+    final navigator = Navigator.of(context);
+    await LecturerRepository.updateLecturer(
+      Lecturer(lectID, editLectNameController.text),
+    );
+    setState(() {});
+    navigator.pop();
+    editLectNameController.clear();
   }
 
   Future removeLecturer(int lecturerId) async {
@@ -140,57 +175,109 @@ class _LecturerScreenState extends State<LecturerScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text("${index + 1}. ${lect.name}"),
-                                    IconButton(
-                                      onPressed: () => showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            content: Column(
-                                              children: [
-                                                const Center(
-                                                  child:
-                                                      Text("Confirm Delete?"),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          onPressed: () => showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                content: FutureBuilder(
+                                                  future: editLectDialogForm(
+                                                    lect.id!,
+                                                  ),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState !=
+                                                        ConnectionState.done) {
+                                                      return Container();
+                                                    }
+                                                    if (!snapshot.hasData) {
+                                                      return Container();
+                                                    }
+                                                    return Form(
+                                                      key: _editLecturerFormKey,
+                                                      child: Column(
+                                                        children: [
+                                                          ...snapshot.data!,
+                                                          ElevatedButton(
+                                                            onPressed:
+                                                                () async {
+                                                              await updateLecturer(
+                                                                  lect.id!);
+                                                            },
+                                                            child: const Text(
+                                                                "Update Lecturer"),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                                const SizedBox(
-                                                  height: 50,
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
+                                              );
+                                            },
+                                          ),
+                                          icon: const Icon(Icons.edit),
+                                        ),
+                                        IconButton(
+                                          onPressed: () => showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                content: Column(
                                                   children: [
-                                                    ElevatedButton(
-                                                      style: const ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStatePropertyAll(
-                                                          Colors.red,
-                                                        ),
-                                                      ),
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                        context,
-                                                      ),
-                                                      child: const Text("NO"),
+                                                    const Center(
+                                                      child: Text(
+                                                          "Confirm Delete?"),
                                                     ),
                                                     const SizedBox(
-                                                      width: 20,
+                                                      height: 50,
                                                     ),
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        removeLecturer(
-                                                          lect.id!,
-                                                        );
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: const Text("YES"),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          style:
+                                                              const ButtonStyle(
+                                                            backgroundColor:
+                                                                MaterialStatePropertyAll(
+                                                              Colors.red,
+                                                            ),
+                                                          ),
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                            context,
+                                                          ),
+                                                          child:
+                                                              const Text("NO"),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 20,
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            removeLecturer(
+                                                              lect.id!,
+                                                            );
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child:
+                                                              const Text("YES"),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      icon: const Icon(Icons.delete_forever),
+                                              );
+                                            },
+                                          ),
+                                          icon:
+                                              const Icon(Icons.delete_forever),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
