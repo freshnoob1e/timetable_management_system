@@ -16,11 +16,17 @@ class _VenueScreenState extends State<VenueScreen> {
   final newVenueNameController = TextEditingController();
   final newVenueCapacityController = TextEditingController();
   int newVenueType = 0;
+  final GlobalKey<FormState> _editVenueFormKey = GlobalKey<FormState>();
+  final editVenueNameController = TextEditingController();
+  final editVenueCapacityController = TextEditingController();
+  int editVenueType = 0;
 
   @override
   void dispose() {
     newVenueNameController.dispose();
     newVenueCapacityController.dispose();
+    editVenueNameController.dispose();
+    editVenueCapacityController.dispose();
     super.dispose();
   }
 
@@ -72,7 +78,66 @@ class _VenueScreenState extends State<VenueScreen> {
     ];
   }
 
-  Future<void> addVenue() async {
+  Future<List<Widget>> editVenueDialogForm(int venueID) async {
+    Venue editVenue = await VenueRepository.retrieveVenueById(venueID);
+    editVenueNameController.text = editVenue.venueName;
+    editVenueCapacityController.text = editVenue.venueCapacity != null
+        ? editVenue.venueCapacity.toString()
+        : "0";
+    for (var vt in VenueType.values) {
+      if (vt == editVenue.venueType) {
+        editVenueType = vt.index;
+        break;
+      }
+    }
+    return [
+      // Venue's name
+      TextFormField(
+        controller: editVenueNameController,
+        decoration: const InputDecoration(
+          hintText: "Venue's name (e.x. D101)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter a name";
+          }
+          return null;
+        },
+      ),
+      TextFormField(
+        controller: editVenueCapacityController,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(
+          hintText: "Venue's capacity (e.x. 40)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return null;
+          }
+          if (int.tryParse(value) == null) {
+            return "Please enter a valid number";
+          }
+          return null;
+        },
+      ),
+      DropdownButtonFormField(
+        value: editVenueType,
+        items: VenueType.values.map((e) {
+          return DropdownMenuItem(
+            value: e.index,
+            child: Text(e.name),
+          );
+        }).toList(),
+        onChanged: (int? value) {
+          if (value != null) {
+            editVenueType = value;
+          }
+        },
+      ),
+    ];
+  }
+
+  Future addVenue() async {
     if (!_newVenueFormKey.currentState!.validate()) return;
     final navigator = Navigator.of(context);
     await VenueRepository.insertVenue(
@@ -90,7 +155,25 @@ class _VenueScreenState extends State<VenueScreen> {
     newVenueType = 0;
   }
 
-  Future<void> removeVenue(int venueId) async {
+  Future updateVenue(int venueID) async {
+    if (!_editVenueFormKey.currentState!.validate()) return;
+    final navigator = Navigator.of(context);
+    await VenueRepository.updateVenue(
+      Venue(
+        venueID,
+        editVenueNameController.text,
+        int.tryParse(editVenueCapacityController.text),
+        VenueType.values[editVenueType],
+      ),
+    );
+    setState(() {});
+    navigator.pop();
+    editVenueNameController.clear();
+    editVenueCapacityController.clear();
+    editVenueType = 0;
+  }
+
+  Future removeVenue(int venueId) async {
     await VenueRepository.deleteVenue(venueId);
     setState(() {});
   }
@@ -180,57 +263,110 @@ class _VenueScreenState extends State<VenueScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text("${index + 1}. ${venue.venueName}"),
-                                    IconButton(
-                                      onPressed: () => showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            content: Column(
-                                              children: [
-                                                const Center(
-                                                  child:
-                                                      Text("Confirm Delete?"),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          onPressed: () => showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                content: Form(
+                                                  key: _editVenueFormKey,
+                                                  child: FutureBuilder(
+                                                    future: editVenueDialogForm(
+                                                        venue.id!),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState !=
+                                                          ConnectionState
+                                                              .done) {
+                                                        return Container();
+                                                      }
+                                                      if (!snapshot.hasData) {
+                                                        return Container();
+                                                      }
+                                                      return Column(
+                                                        children: [
+                                                          ...snapshot.data!,
+                                                          ElevatedButton(
+                                                            onPressed:
+                                                                () async {
+                                                              await updateVenue(
+                                                                  venue.id!);
+                                                            },
+                                                            child: const Text(
+                                                                "Update Venue"),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 50,
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
+                                              );
+                                            },
+                                          ),
+                                          icon: const Icon(Icons.edit),
+                                        ),
+                                        IconButton(
+                                          onPressed: () => showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                content: Column(
                                                   children: [
-                                                    ElevatedButton(
-                                                      style: const ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStatePropertyAll(
-                                                          Colors.red,
-                                                        ),
-                                                      ),
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                        context,
-                                                      ),
-                                                      child: const Text("NO"),
+                                                    const Center(
+                                                      child: Text(
+                                                          "Confirm Delete?"),
                                                     ),
                                                     const SizedBox(
-                                                      width: 20,
+                                                      height: 50,
                                                     ),
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        removeVenue(
-                                                          venue.id!,
-                                                        );
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: const Text("YES"),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          style:
+                                                              const ButtonStyle(
+                                                            backgroundColor:
+                                                                MaterialStatePropertyAll(
+                                                              Colors.red,
+                                                            ),
+                                                          ),
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                            context,
+                                                          ),
+                                                          child:
+                                                              const Text("NO"),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 20,
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            removeVenue(
+                                                              venue.id!,
+                                                            );
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child:
+                                                              const Text("YES"),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      icon: const Icon(Icons.delete_forever),
+                                              );
+                                            },
+                                          ),
+                                          icon:
+                                              const Icon(Icons.delete_forever),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
