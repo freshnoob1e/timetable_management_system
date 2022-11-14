@@ -13,10 +13,13 @@ class ProgrammeScreen extends StatefulWidget {
 class _ProgrammeScreenState extends State<ProgrammeScreen> {
   final GlobalKey<FormState> _newProgrammeFormKey = GlobalKey<FormState>();
   final newProgCodeController = TextEditingController();
+  final GlobalKey<FormState> _editProgrammeFormKey = GlobalKey<FormState>();
+  final editProgCodeController = TextEditingController();
 
   @override
   void dispose() {
     newProgCodeController.dispose();
+    editProgCodeController.dispose();
     super.dispose();
   }
 
@@ -38,8 +41,30 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
     ];
   }
 
-  Future<void> addProgramme() async {
+  Future<List<Widget>> editProgDialogForm(int progID) async {
+    Programme editProg =
+        await ProgrammeRepository.retrieveProgrammeById(progID);
+    editProgCodeController.text = editProg.programmeCode;
+    return [
+      // Programme's code
+      TextFormField(
+        controller: editProgCodeController,
+        decoration: const InputDecoration(
+          hintText: "Programme's code (e.x. RSDY1S2)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter a valid code";
+          }
+          return null;
+        },
+      ),
+    ];
+  }
+
+  Future addProgramme() async {
     if (!_newProgrammeFormKey.currentState!.validate()) return;
+
     final navigator = Navigator.of(context);
     await ProgrammeRepository.insertProgramme(
       Programme(null, newProgCodeController.text),
@@ -49,7 +74,19 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
     newProgCodeController.clear();
   }
 
-  Future<void> removeProgramme(int progId) async {
+  Future updateProgramme(int progID) async {
+    if (!_editProgrammeFormKey.currentState!.validate()) return;
+
+    final navigator = Navigator.of(context);
+    await ProgrammeRepository.updateProgramme(
+      Programme(progID, editProgCodeController.text),
+    );
+    setState(() {});
+    navigator.pop();
+    newProgCodeController.clear();
+  }
+
+  Future removeProgramme(int progId) async {
     await ProgrammeRepository.deleteProgramme(progId);
     setState(() {});
   }
@@ -139,57 +176,115 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text("${index + 1}. ${prog.programmeCode}"),
-                                    IconButton(
-                                      onPressed: () => showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            content: Column(
-                                              children: [
-                                                const Center(
-                                                  child:
-                                                      Text("Confirm Delete?"),
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                            onPressed: () => showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return AlertDialog(
+                                                      content: FutureBuilder(
+                                                        future:
+                                                            editProgDialogForm(
+                                                                prog.id!),
+                                                        builder: (
+                                                          context,
+                                                          snapshot,
+                                                        ) {
+                                                          if (snapshot
+                                                                  .connectionState !=
+                                                              ConnectionState
+                                                                  .done) {
+                                                            return Container();
+                                                          }
+                                                          if (!snapshot
+                                                              .hasData) {
+                                                            return Container();
+                                                          }
+                                                          return Form(
+                                                            key:
+                                                                _editProgrammeFormKey,
+                                                            child: Column(
+                                                              children: [
+                                                                ...snapshot
+                                                                    .data!,
+                                                                ElevatedButton(
+                                                                  onPressed:
+                                                                      () async {
+                                                                    await updateProgramme(
+                                                                        prog.id!);
+                                                                  },
+                                                                  child: const Text(
+                                                                      "Update Programme"),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                                const SizedBox(
-                                                  height: 50,
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
+                                            icon: const Icon(Icons.edit)),
+                                        IconButton(
+                                          onPressed: () => showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                content: Column(
                                                   children: [
-                                                    ElevatedButton(
-                                                      style: const ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStatePropertyAll(
-                                                          Colors.red,
-                                                        ),
-                                                      ),
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                        context,
-                                                      ),
-                                                      child: const Text("NO"),
+                                                    const Center(
+                                                      child: Text(
+                                                          "Confirm Delete?"),
                                                     ),
                                                     const SizedBox(
-                                                      width: 20,
+                                                      height: 50,
                                                     ),
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        removeProgramme(
-                                                          prog.id!,
-                                                        );
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: const Text("YES"),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          style:
+                                                              const ButtonStyle(
+                                                            backgroundColor:
+                                                                MaterialStatePropertyAll(
+                                                              Colors.red,
+                                                            ),
+                                                          ),
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                            context,
+                                                          ),
+                                                          child:
+                                                              const Text("NO"),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 20,
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            removeProgramme(
+                                                              prog.id!,
+                                                            );
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child:
+                                                              const Text("YES"),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      icon: const Icon(Icons.delete_forever),
+                                              );
+                                            },
+                                          ),
+                                          icon:
+                                              const Icon(Icons.delete_forever),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
