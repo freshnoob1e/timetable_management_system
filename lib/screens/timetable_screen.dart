@@ -1,6 +1,11 @@
+import 'dart:isolate';
+
 import 'package:calendar_view/calendar_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
+import 'package:timetable_management_system/genetic_algorithm/population.dart';
 import 'package:timetable_management_system/genetic_algorithm/scheduler.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
@@ -34,8 +39,15 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   void optimizeTimetable() {
     scheduler.ga.generationCount = 0;
-    scheduler.optimize(toleratedConflicts: 0);
-    refreshTimetable();
+
+    compute<OptimizeIsolateModel, Population>(
+      scheduler.optimize,
+      OptimizeIsolateModel(toleratedConflicts: 0),
+    ).then((newPopulation) {
+      scheduler.ga.population = newPopulation;
+      refreshTimetable();
+      EasyLoading.showSuccess("Optimized timetable!");
+    });
   }
 
   void refreshTimetable() {
@@ -166,10 +178,16 @@ class _TimetableScreenState extends State<TimetableScreen> {
                       EasyLoading.show(status: "Optimizing...");
 
                       optimizeTimetable();
-
-                      EasyLoading.showSuccess("Optimized timetable!");
                     },
                     child: const Text("Optimize table"),
+                  )
+                : Container(),
+            generatedTimetable
+                ? ElevatedButton(
+                    onPressed: () {
+                      refreshTimetable();
+                    },
+                    child: const Text("DEBUG: Refresh table"),
                   )
                 : Container(),
             Expanded(

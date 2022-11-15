@@ -1,6 +1,9 @@
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:timetable_management_system/genetic_algorithm/genetic_algorithm.dart';
+import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
+import 'package:timetable_management_system/genetic_algorithm/population.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
 import 'package:timetable_management_system/model/timeslot.dart';
@@ -64,13 +67,13 @@ class Scheduler {
     ga.population.calcEachFitness();
   }
 
-  void optimize({int maxGeneration = 5000, int toleratedConflicts = 5}) {
+  Population optimize(OptimizeIsolateModel optimizeIsolateModel) {
     do {
       evolve();
-    } while (ga.generationCount < maxGeneration &&
-        ga.population.getFittest().fitness < (1 / (1 + toleratedConflicts)));
-
-    fittestTimetableClassSessions();
+    } while (ga.generationCount < optimizeIsolateModel.maxGeneration &&
+        ga.population.getFittest().fitness <
+            (1 / (1 + optimizeIsolateModel.toleratedConflicts)));
+    return ga.population;
   }
 
   List<ClassSession> fittestTimetableClassSessions() {
