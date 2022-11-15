@@ -26,6 +26,18 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Scheduler scheduler = Scheduler();
   bool generatedTimetable = false;
 
+  void generateTimetable(List<Course> courses, List<Venue> venues) {
+    scheduler = Scheduler();
+    //TODO remove hard coded value (day period/chromosome count)
+    scheduler.initializeInitialTimetable(courses, 8, 25, venues);
+  }
+
+  void optimizeTimetable() {
+    scheduler.ga.generationCount = 0;
+    scheduler.optimize(toleratedConflicts: 0);
+    refreshTimetable();
+  }
+
   void refreshTimetable() {
     CalendarControllerProvider calendarControllerProvider =
         CalendarControllerProvider.of(context);
@@ -139,8 +151,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 List<Course> courses = await CourseRepository.retrieveCourses();
                 List<Venue> venues = await VenueRepository.retrieveVenues();
 
-                //TODO remove hard coded value (day period/chromosome count)
-                scheduler.initializeInitialTimetable(courses, 8, 5, venues);
+                generateTimetable(courses, venues);
 
                 refreshTimetable();
                 generatedTimetable = true;
@@ -151,7 +162,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
             ),
             generatedTimetable
                 ? ElevatedButton(
-                    onPressed: () async {},
+                    onPressed: () {
+                      EasyLoading.show(status: "Optimizing...");
+
+                      optimizeTimetable();
+
+                      EasyLoading.showSuccess("Optimized timetable!");
+                    },
                     child: const Text("Optimize table"),
                   )
                 : Container(),
