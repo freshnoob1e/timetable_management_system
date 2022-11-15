@@ -1,7 +1,11 @@
 import 'package:data_table_2/data_table_2.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:intl/intl.dart';
+import 'package:timetable_management_system/model/timeslot.dart';
+import 'package:timetable_management_system/repository/app_setting_repository.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
 class ManageTimeslotScreen extends StatefulWidget {
@@ -15,6 +19,12 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
   // {"0,1", DataCell}
   Map<String, DataCell> toggleCells = {};
   List<String> deactivatedCells = [];
+  DateTime hourStartDT = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+    8,
+  );
 
   void handleCellBtnOnClick(String cellRowColIndex) {
     Color setColor = Colors.green[300]!;
@@ -42,6 +52,36 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
     });
   }
 
+  Future handleSaveOnClick() async {
+    List<TimeSlot> deactivatedTimeslots = [];
+    for (String rowCell in deactivatedCells) {
+      final splitted = rowCell.split(",");
+
+      DateTime d = DateTime.now();
+      d = DateTime(d.year, d.month, d.day, 8, 0);
+      DateTime sundayD = d.subtract(Duration(days: d.weekday));
+      DateTime cellStartDT =
+          sundayD.add(Duration(days: int.parse(splitted[0]) + 1));
+      cellStartDT = cellStartDT.add(
+        Duration(
+          minutes: 30 * (int.parse(splitted[1]) - 1),
+        ),
+      );
+      DateTime cellEndDT = cellStartDT.add(
+        const Duration(
+          minutes: 30,
+        ),
+      );
+
+      deactivatedTimeslots.add(
+        TimeSlot(null, cellStartDT, cellEndDT),
+      );
+    }
+
+    await AppSettingRepository.updateDeactivatedTimeslots(deactivatedTimeslots);
+    EasyLoading.showSuccess("Saved Successfully");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +95,13 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
             child: SizedBox(
               height: 800,
               child: DataTable2(
+                border: const TableBorder(
+                  verticalInside: BorderSide(width: 0.5),
+                  horizontalInside: BorderSide(width: 0.5),
+                  bottom: BorderSide(width: 0.5),
+                  left: BorderSide(width: 0.5),
+                  right: BorderSide(width: 0.5),
+                ),
                 columnSpacing: 0,
                 minWidth: 600,
                 columns: List.generate(29, (index) {
@@ -64,8 +111,18 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
                       size: ColumnSize.L,
                     );
                   }
+                  if (index % 2 != 0) {
+                    DateTime currentHour =
+                        hourStartDT.add(Duration(minutes: 30 * (index - 1)));
+                    String headerText =
+                        "${currentHour.hour.toString().padLeft(2, "0")}:${currentHour.minute.toString().padLeft(2, "0")}";
+                    return DataColumn2(
+                      label: Text(headerText),
+                      size: ColumnSize.M,
+                    );
+                  }
                   return const DataColumn2(
-                    label: Text("Header"),
+                    label: Text(""),
                     size: ColumnSize.M,
                   );
                 }),
@@ -130,7 +187,10 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
                 child: const Text("Reset"),
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  EasyLoading.show(status: "Saving...");
+                  handleSaveOnClick();
+                },
                 child: const Text("Save"),
               ),
             ],

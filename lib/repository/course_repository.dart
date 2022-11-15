@@ -5,7 +5,6 @@ import 'package:timetable_management_system/model/course.dart';
 import 'package:timetable_management_system/model/lecturer.dart';
 import 'package:timetable_management_system/model/programme.dart';
 import 'package:timetable_management_system/repository/database_repository.dart';
-import 'package:timetable_management_system/repository/lecturer_repository.dart';
 import 'package:timetable_management_system/utility/class_type.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
