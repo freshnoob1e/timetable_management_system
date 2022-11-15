@@ -54,6 +54,6 @@ class Course {
 
   @override
   String toString() {
-    return "<Course: ${lecturer.name}, $programmeCode, $courseDescription, Lecture: ${lessonsHours[ClassType.lecture]}, Tutorial: ${lessonsHours[ClassType.tutorial]}, Practical: ${lessonsHours[ClassType.practical]}, Blended: ${lessonsHours[ClassType.blended]}>";
+    return "<Course: id: $id, CourseCode: $courseCode, ${lecturer.name}, $programmeCode, $courseDescription, Lecture: ${lessonsHours[ClassType.lecture]}, Tutorial: ${lessonsHours[ClassType.tutorial]}, Practical: ${lessonsHours[ClassType.practical]}, Blended: ${lessonsHours[ClassType.blended]}>";
   }
 }

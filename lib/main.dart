@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timetable_management_system/screens/timetable_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:timetable_management_system/utility/class_type.dart';
 
 Future main() async {
   if (Platform.isWindows || Platform.isLinux) {
@@ -35,6 +35,7 @@ class _MyAppState extends State<MyApp> {
           primarySwatch: Colors.blue,
         ),
         home: const TimetableScreen(),
+        builder: EasyLoading.init(),
       ),
     );
   }
