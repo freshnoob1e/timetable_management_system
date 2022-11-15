@@ -1,4 +1,4 @@
-import 'package:timetable_management_system/algo/gene.dart';
+import 'package:timetable_management_system/genetic_algorithm/gene.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 
 class Chromosome {

@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:timetable_management_system/algo/genetic_algorithm.dart';
+import 'package:timetable_management_system/genetic_algorithm/genetic_algorithm.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
 import 'package:timetable_management_system/model/timeslot.dart';

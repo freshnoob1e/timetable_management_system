@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:timetable_management_system/algo/chromosome.dart';
-import 'package:timetable_management_system/algo/gene.dart';
+import 'package:timetable_management_system/genetic_algorithm/chromosome.dart';
+import 'package:timetable_management_system/genetic_algorithm/gene.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
 import 'package:timetable_management_system/model/timeslot.dart';

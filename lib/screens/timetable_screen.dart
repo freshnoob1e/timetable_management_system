@@ -1,7 +1,7 @@
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:timetable_management_system/algo/scheduler.dart';
+import 'package:timetable_management_system/genetic_algorithm/scheduler.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
 import 'package:timetable_management_system/model/venue.dart';
