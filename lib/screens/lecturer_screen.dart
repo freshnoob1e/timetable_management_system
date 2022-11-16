@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:timetable_management_system/model/lecturer.dart';
 import 'package:timetable_management_system/repository/lecturer_repository.dart';
+import 'package:timetable_management_system/utility/csvReader/timetable_csv_reader.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
 class LecturerScreen extends StatefulWidget {
@@ -90,6 +91,42 @@ class _LecturerScreenState extends State<LecturerScreen> {
     setState(() {});
   }
 
+  Future<List<dynamic>> getColumn() async {
+    try {
+      return await TimetableCSVReader.getCSVColumn("Lecturer");
+    } catch (e) {
+      print(e.toString());
+      return [];
+    }
+  }
+
+  Future addListOfLecturer(List<String> lecturerNames) async {
+    lecturerNames = lecturerNames.toSet().toList();
+    for (String lectName in lecturerNames) {
+      await LecturerRepository.insertLecturer(
+        Lecturer(null, lectName),
+      );
+    }
+    setState(() {});
+  }
+
+  Future importLecturers() async {
+    List<dynamic> dataList = await getColumn();
+    List<String> processedDataList = [];
+
+    for (var data in dataList) {
+      processedDataList.add(data.toString());
+    }
+
+    await deleteAllLecturer();
+    await addListOfLecturer(processedDataList);
+  }
+
+  Future deleteAllLecturer() async {
+    await LecturerRepository.deleteAllLecturer();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,189 +166,244 @@ class _LecturerScreenState extends State<LecturerScreen> {
                   width: 20,
                 ),
                 ElevatedButton(
-                  onPressed: () {},
-                  child: const Text("btn txt"),
+                  onPressed: () async {
+                    List<dynamic> dataList = await getColumn();
+                    List<String> processedDataList = [];
+
+                    for (var data in dataList) {
+                      processedDataList.add(data.toString());
+                    }
+
+                    addListOfLecturer(processedDataList);
+                  },
+                  child: const Text("Add lecturer from CSV"),
                 ),
                 const SizedBox(
                   width: 20,
                 ),
                 ElevatedButton(
-                  onPressed: () {},
-                  child: const Text("btn txt"),
+                  onPressed: () async {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        content: Column(children: [
+                          const Center(
+                            child: Text(
+                              "This will overwrite your existing list, confirm continue?",
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 40,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text("NO"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  NavigatorState navigator =
+                                      Navigator.of(context);
+                                  await importLecturers();
+                                  navigator.pop();
+                                },
+                                child: const Text("YES"),
+                              ),
+                            ],
+                          ),
+                        ]),
+                      ),
+                    );
+                  },
+                  child: const Text("Import lecturer from CSV"),
                 ),
                 const SizedBox(
                   width: 20,
                 ),
+                ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll(
+                      Colors.red[300],
+                    ),
+                  ),
+                  onPressed: () async {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        content: Column(
+                          children: [
+                            const Center(
+                              child: Text(
+                                textAlign: TextAlign.center,
+                                "Confirm delete all lecturer?",
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStatePropertyAll(
+                                      Colors.red[300],
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("NO"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    NavigatorState navigator =
+                                        Navigator.of(context);
+                                    await deleteAllLecturer();
+                                    navigator.pop();
+                                  },
+                                  child: const Text("YES"),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text("Delete all lecturer from list"),
+                ),
               ],
             ),
-            Row(
-              children: [
-                Expanded(
-                  flex: 7,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(),
-                    ),
-                    child: SizedBox(
-                      height: 600,
-                      child: FutureBuilder(
-                        future: LecturerRepository.retrieveLecturers(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState !=
-                              ConnectionState.done) {
-                            return Container();
-                          }
-                          if (!snapshot.hasData) return Container();
-                          return ListView.builder(
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              Lecturer lect = snapshot.data![index];
-                              return Container(
-                                decoration: index % 2 != 0
-                                    ? const BoxDecoration(color: Colors.black12)
-                                    : null,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text("${index + 1}. ${lect.name}"),
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          onPressed: () => showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return AlertDialog(
-                                                content: FutureBuilder(
-                                                  future: editLectDialogForm(
-                                                    lect.id!,
-                                                  ),
-                                                  builder: (context, snapshot) {
-                                                    if (snapshot
-                                                            .connectionState !=
-                                                        ConnectionState.done) {
-                                                      return Container();
-                                                    }
-                                                    if (!snapshot.hasData) {
-                                                      return Container();
-                                                    }
-                                                    return Form(
-                                                      key: _editLecturerFormKey,
-                                                      child: Column(
-                                                        children: [
-                                                          ...snapshot.data!,
-                                                          ElevatedButton(
-                                                            onPressed:
-                                                                () async {
-                                                              await updateLecturer(
-                                                                  lect.id!);
-                                                            },
-                                                            child: const Text(
-                                                                "Update Lecturer"),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          icon: const Icon(Icons.edit),
-                                        ),
-                                        IconButton(
-                                          onPressed: () => showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return AlertDialog(
-                                                content: Column(
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(),
+              ),
+              child: SizedBox(
+                height: 600,
+                child: FutureBuilder(
+                  future: LecturerRepository.retrieveLecturers(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return Container();
+                    }
+                    if (!snapshot.hasData) return Container();
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        Lecturer lect = snapshot.data![index];
+                        return Container(
+                          decoration: index % 2 != 0
+                              ? const BoxDecoration(color: Colors.black12)
+                              : null,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("${index + 1}. ${lect.name}"),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          content: FutureBuilder(
+                                            future: editLectDialogForm(
+                                              lect.id!,
+                                            ),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState !=
+                                                  ConnectionState.done) {
+                                                return Container();
+                                              }
+                                              if (!snapshot.hasData) {
+                                                return Container();
+                                              }
+                                              return Form(
+                                                key: _editLecturerFormKey,
+                                                child: Column(
                                                   children: [
-                                                    const Center(
-                                                      child: Text(
-                                                          "Confirm Delete?"),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 50,
-                                                    ),
-                                                    Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        ElevatedButton(
-                                                          style:
-                                                              const ButtonStyle(
-                                                            backgroundColor:
-                                                                MaterialStatePropertyAll(
-                                                              Colors.red,
-                                                            ),
-                                                          ),
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                            context,
-                                                          ),
-                                                          child:
-                                                              const Text("NO"),
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 20,
-                                                        ),
-                                                        ElevatedButton(
-                                                          onPressed: () {
-                                                            removeLecturer(
-                                                              lect.id!,
-                                                            );
-                                                            Navigator.pop(
-                                                                context);
-                                                          },
-                                                          child:
-                                                              const Text("YES"),
-                                                        ),
-                                                      ],
+                                                    ...snapshot.data!,
+                                                    ElevatedButton(
+                                                      onPressed: () async {
+                                                        await updateLecturer(
+                                                            lect.id!);
+                                                      },
+                                                      child: const Text(
+                                                          "Update Lecturer"),
                                                     ),
                                                   ],
                                                 ),
                                               );
                                             },
                                           ),
-                                          icon:
-                                              const Icon(Icons.delete_forever),
-                                        ),
-                                      ],
+                                        );
+                                      },
                                     ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                                    icon: const Icon(Icons.edit),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          content: Column(
+                                            children: [
+                                              const Center(
+                                                child: Text("Confirm Delete?"),
+                                              ),
+                                              const SizedBox(
+                                                height: 50,
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  ElevatedButton(
+                                                    style: const ButtonStyle(
+                                                      backgroundColor:
+                                                          MaterialStatePropertyAll(
+                                                        Colors.red,
+                                                      ),
+                                                    ),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                      context,
+                                                    ),
+                                                    child: const Text("NO"),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 20,
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      removeLecturer(
+                                                        lect.id!,
+                                                      );
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text("YES"),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    icon: const Icon(Icons.delete_forever),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-                const SizedBox(
-                  width: 20,
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: const Text("btn 1"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: const Text("btn 2"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: const Text("btn 3"),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),

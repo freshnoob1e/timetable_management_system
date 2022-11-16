@@ -4,6 +4,9 @@ import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:timetable_management_system/screens/lecturer_screen.dart';
+import 'package:timetable_management_system/screens/programme_screen.dart';
+import 'package:timetable_management_system/screens/test_csv.dart';
 import 'package:timetable_management_system/screens/timetable_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 

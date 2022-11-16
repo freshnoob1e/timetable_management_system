@@ -77,4 +77,12 @@ class LecturerRepository {
       whereArgs: [id],
     );
   }
+
+  static Future deleteAllLecturer() async {
+    final db = await openDB();
+
+    await db.rawDelete(
+      "DELETE FROM ${Strings.lecturerTableName}",
+    );
+  }
 }

@@ -80,4 +80,10 @@ class ProgrammeRepository {
       whereArgs: [id],
     );
   }
+
+  static Future deleteAllProgrammes() async {
+    final db = await openDB();
+
+    await db.rawDelete("DELETE FROM ${Strings.programmeTableName}");
+  }
 }
