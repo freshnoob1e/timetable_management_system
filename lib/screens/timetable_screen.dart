@@ -89,19 +89,29 @@ class _TimetableScreenState extends State<TimetableScreen> {
           classTypeStr = "Unknown";
           break;
       }
+      String eventStr =
+          "$classTypeStr, ${session.venue.venueName}&${session.course.programmeCode.programmeCode}, ${session.course.lecturer.name}";
+      bool hasClash = false;
+      if (session.isAnyHardClash(sessions)) {
+        hasClash = true;
+      }
+      if (hasClash) {
+        eventStr += "&true";
+      } else {
+        eventStr += "&false";
+      }
+
       final event = CalendarEventData(
         title: session.course.courseCode,
-        event:
-            "$classTypeStr, ${session.venue.venueName}&${session.course.programmeCode.programmeCode}, ${session.course.lecturer.name}",
+        event: eventStr,
         date: session.startTime,
         endDate: session.endTime,
         startTime: session.startTime,
         endTime: session.endTime,
       );
       calendarControllerProvider.controller.add(event);
-
-      setState(() {});
     }
+    setState(() {});
   }
 
   @override
@@ -216,12 +226,16 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 eventTileBuilder:
                     (date, events, boundary, startDuration, endDuration) {
                   CalendarEventData event = events[0];
+                  bool gotClash =
+                      event.event.toString().split("&")[2].toLowerCase() ==
+                          "true";
                   return Container(
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.all(
                         Radius.circular(5),
                       ),
-                      color: Colors.deepPurple[400],
+                      color:
+                          gotClash ? Colors.red[400] : Colors.deepPurple[400],
                     ),
                     child: Tooltip(
                       message:

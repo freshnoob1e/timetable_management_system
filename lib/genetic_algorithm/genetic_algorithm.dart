@@ -135,7 +135,7 @@ class GeneticAlgorithm {
 
       classSessions.add(
         ClassSession(
-          0,
+          i,
           population.classSessions[i].course,
           population.classSessions[i].classType,
           population.classSessions[i].venue,

@@ -32,8 +32,14 @@ class TimeSlot {
 
     if ((compareSelfStartTime.compareTo(compareTargetEndTime) < 0) &&
         (compareSelfEndTime.compareTo(compareTargetStartTime) > 0)) {
-      // print("$compareSelfStartTime - $compareSelfEndTime");
-      // print("$compareTargetStartTime - $compareTargetEndTime\n\n");
+      return true;
+    }
+    return false;
+  }
+
+  bool isConflictFullDT(TimeSlot ts) {
+    if ((startTime.compareTo(ts.endTime) < 0) &&
+        (endTime.compareTo(ts.startTime) > 0)) {
       return true;
     }
     return false;
