@@ -25,6 +25,46 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
     DateTime.now().day,
     8,
   );
+  Map<String, int> tsMap = {};
+
+  @override
+  void initState() {
+    for (int x = 0; x < 14 * 2; x++) {
+      DateTime thisDT = hourStartDT.add(Duration(minutes: 30 * x));
+      tsMap.addAll({
+        "${thisDT.hour}:${thisDT.minute}": x + 1,
+      });
+    }
+
+    getSavedTimeslots();
+
+    super.initState();
+  }
+
+  Future getSavedTimeslots() async {
+    List<TimeSlot> timeslots =
+        await AppSettingRepository.retrieveDeactivatedTimeslots();
+    for (var ts in timeslots) {
+      int row = ts.startTime.weekday - 1;
+      int col = tsMap["${ts.startTime.hour}:${ts.startTime.minute}"]!;
+      String cellRowColIndex = "$row,$col";
+      toggleCells.addAll({
+        cellRowColIndex: DataCell(
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+            ),
+            onPressed: () => handleCellBtnOnClick(
+              cellRowColIndex,
+            ),
+            child: Container(),
+          ),
+        ),
+      });
+      deactivatedCells.add(cellRowColIndex);
+    }
+    setState(() {});
+  }
 
   void handleCellBtnOnClick(String cellRowColIndex) {
     Color setColor = Colors.green[300]!;
@@ -181,10 +221,22 @@ class _ManageTimeslotScreenState extends State<ManageTimeslotScreen> {
                   setState(() {
                     toggleCells = {};
                     deactivatedCells = [];
+                  });
+                  getSavedTimeslots().then((value) {
                     GFToast.showToast("Cells reseted!", context);
                   });
                 },
                 child: const Text("Reset"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    toggleCells = {};
+                    deactivatedCells = [];
+                    GFToast.showToast("Cells Cleared!", context);
+                  });
+                },
+                child: const Text("Clear All"),
               ),
               ElevatedButton(
                 onPressed: () {
