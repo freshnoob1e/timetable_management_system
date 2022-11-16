@@ -45,22 +45,6 @@ class _VenueScreenState extends State<VenueScreen> {
           return null;
         },
       ),
-      TextFormField(
-        controller: newVenueCapacityController,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          hintText: "Venue's capacity (e.x. 40)",
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return null;
-          }
-          if (int.tryParse(value) == null) {
-            return "Please enter a valid number";
-          }
-          return null;
-        },
-      ),
       DropdownButtonFormField(
         value: 0,
         items: VenueType.values.map((e) {
@@ -100,22 +84,6 @@ class _VenueScreenState extends State<VenueScreen> {
         validator: (value) {
           if (value == null || value.isEmpty) {
             return "Please enter a name";
-          }
-          return null;
-        },
-      ),
-      TextFormField(
-        controller: editVenueCapacityController,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          hintText: "Venue's capacity (e.x. 40)",
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return null;
-          }
-          if (int.tryParse(value) == null) {
-            return "Please enter a valid number";
           }
           return null;
         },
