@@ -80,7 +80,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
       }
       final event = CalendarEventData(
         title: session.course.courseCode,
-        event: "$classTypeStr, ${session.venue.venueName}",
+        event:
+            "$classTypeStr, ${session.venue.venueName}&${session.course.programmeCode.programmeCode}, ${session.course.lecturer.name}",
         date: session.startTime,
         startTime: session.startTime,
         endTime: session.endTime,
@@ -101,95 +102,101 @@ class _TimetableScreenState extends State<TimetableScreen> {
         child: Column(
           children: [
             const Text("Timetable Screen"),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CourseScreen(),
-                  ),
-                );
-              },
-              child: const Text("To course screen"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LecturerScreen(),
-                  ),
-                );
-              },
-              child: const Text("To lecturer screen"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProgrammeScreen(),
-                  ),
-                );
-              },
-              child: const Text("To programme screen"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const VenueScreen(),
-                  ),
-                );
-              },
-              child: const Text("To venue screen"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ManageTimeslotScreen(),
-                  ),
-                );
-              },
-              child: const Text("Manage timeslot"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                EasyLoading.show(status: "Generating...");
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CourseScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text("To course screen"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LecturerScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text("To lecturer screen"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProgrammeScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text("To programme screen"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const VenueScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text("To venue screen"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ManageTimeslotScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text("Manage timeslot"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    EasyLoading.show(status: "Generating...");
 
-                List<Course> courses = await CourseRepository.retrieveCourses();
-                List<Venue> venues = await VenueRepository.retrieveVenues();
+                    List<Course> courses =
+                        await CourseRepository.retrieveCourses();
+                    List<Venue> venues = await VenueRepository.retrieveVenues();
 
-                generateTimetable(courses, venues);
+                    generateTimetable(courses, venues);
 
-                refreshTimetable();
-                generatedTimetable = true;
+                    refreshTimetable();
+                    generatedTimetable = true;
 
-                EasyLoading.showSuccess("Generated timetable!");
-              },
-              child: const Text("Generate timetable"),
+                    EasyLoading.showSuccess("Generated timetable!");
+                  },
+                  child: const Text("Generate timetable"),
+                ),
+                generatedTimetable
+                    ? ElevatedButton(
+                        onPressed: () {
+                          EasyLoading.show(status: "Optimizing...");
+
+                          optimizeTimetable();
+                        },
+                        child: const Text("Optimize table"),
+                      )
+                    : Container(),
+                // generatedTimetable
+                //     ? ElevatedButton(
+                //         onPressed: () {
+                //           refreshTimetable();
+                //         },
+                //         child: const Text("DEBUG: Refresh table"),
+                //       )
+                //     : Container(),
+              ],
             ),
-            generatedTimetable
-                ? ElevatedButton(
-                    onPressed: () {
-                      EasyLoading.show(status: "Optimizing...");
-
-                      optimizeTimetable();
-                    },
-                    child: const Text("Optimize table"),
-                  )
-                : Container(),
-            generatedTimetable
-                ? ElevatedButton(
-                    onPressed: () {
-                      refreshTimetable();
-                    },
-                    child: const Text("DEBUG: Refresh table"),
-                  )
-                : Container(),
             Expanded(
               child: WeekView(
                 showLiveTimeLineInAllDays: true,
@@ -206,7 +213,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     ),
                     child: Tooltip(
                       message:
-                          "Course Code: ${event.title} | Class Type , Venue: ${event.event}",
+                          "Course Code: ${event.title} | Class Type , Venue: ${event.event.toString().split("&")[0]}"
+                          " | Programme, Lecturer: ${event.event.toString().split("&")[1]}",
                       child: OverflowBox(
                         maxHeight: double.infinity,
                         child: Column(
@@ -232,7 +240,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
                                   color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
-                                event.event as String,
+                                event.event.toString().split("&")[0],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Center(
+                              child: Text(
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                                event.event.toString().split("&")[1],
                               ),
                             ),
                           ],
