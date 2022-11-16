@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timetable_management_system/model/programme.dart';
 import 'package:timetable_management_system/repository/database_repository.dart';

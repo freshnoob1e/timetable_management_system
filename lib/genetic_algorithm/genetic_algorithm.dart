@@ -123,11 +123,6 @@ class GeneticAlgorithm {
     Chromosome chromosome,
     int startHourInt,
   ) {
-    DateTime d = DateTime.now();
-    int thisWeekDayNum = d.weekday;
-    DateTime weekStartDay = d.subtract(Duration(days: thisWeekDayNum - 1));
-    DateTime startHour =
-        DateTime(d.year, d.month, weekStartDay.day, startHourInt);
     List<ClassSession> classSessions = [];
 
     for (int i = 0; i < chromosome.genesLength; i++) {

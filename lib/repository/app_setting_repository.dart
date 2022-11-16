@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:timetable_management_system/model/timeslot.dart';
 import 'package:timetable_management_system/repository/database_repository.dart';

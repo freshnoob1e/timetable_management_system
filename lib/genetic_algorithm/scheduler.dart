@@ -1,4 +1,3 @@
-import 'dart:isolate';
 import 'dart:math';
 
 import 'package:timetable_management_system/genetic_algorithm/genetic_algorithm.dart';

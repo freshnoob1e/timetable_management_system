@@ -1,5 +1,3 @@
-import 'dart:isolate';
-
 class OptimizeIsolateModel {
   int maxGeneration;
   int toleratedConflicts;
