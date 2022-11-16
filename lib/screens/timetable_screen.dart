@@ -9,7 +9,9 @@ import 'package:timetable_management_system/genetic_algorithm/population.dart';
 import 'package:timetable_management_system/genetic_algorithm/scheduler.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
+import 'package:timetable_management_system/model/timeslot.dart';
 import 'package:timetable_management_system/model/venue.dart';
+import 'package:timetable_management_system/repository/app_setting_repository.dart';
 import 'package:timetable_management_system/repository/course_repository.dart';
 import 'package:timetable_management_system/repository/venue_repository.dart';
 import 'package:timetable_management_system/screens/course_screen.dart';
@@ -31,10 +33,21 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Scheduler scheduler = Scheduler();
   bool generatedTimetable = false;
 
-  void generateTimetable(List<Course> courses, List<Venue> venues) {
+  Future generateTimetable(List<Course> courses, List<Venue> venues) async {
     scheduler = Scheduler();
+
+    List<TimeSlot> deactivatedTimeslots =
+        await AppSettingRepository.retrieveDeactivatedTimeslots();
+
     //TODO remove hard coded value (day period/chromosome count)
-    scheduler.initializeInitialTimetable(courses, 8, 25, venues);
+    scheduler.initializeInitialTimetable(
+      courses,
+      14,
+      6,
+      25,
+      venues,
+      deactivatedTimeslots,
+    );
   }
 
   void optimizeTimetable() {
@@ -168,7 +181,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         await CourseRepository.retrieveCourses();
                     List<Venue> venues = await VenueRepository.retrieveVenues();
 
-                    generateTimetable(courses, venues);
+                    await generateTimetable(courses, venues);
 
                     refreshTimetable();
                     generatedTimetable = true;

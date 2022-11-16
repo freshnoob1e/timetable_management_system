@@ -119,10 +119,10 @@ class GeneticAlgorithm {
     }
   }
 
-  void visualizeChromosome(Chromosome chromosome) {
+  void visualizeChromosome(Chromosome chromosome, int startHourInt) {
     print("Fitness = ${chromosome.fitness}");
     String timeslotCell = "TIME   \t\t";
-    DateTime startHour = DateTime(2022, 1, 1, 8);
+    DateTime startHour = DateTime(2022, 1, 1, startHourInt);
     for (int i = 0; i < population.timeslotLength; i++) {
       DateTime currentTime = startHour.add(Duration(minutes: 30 * i));
       timeslotCell +=
@@ -144,11 +144,13 @@ class GeneticAlgorithm {
     print("\n\n");
   }
 
-  List<ClassSession> getChromosomeClassSessions(Chromosome chromosome) {
+  List<ClassSession> getChromosomeClassSessions(
+      Chromosome chromosome, int startHourInt) {
     DateTime d = DateTime.now();
     int thisWeekDayNum = d.weekday;
     DateTime weekStartDay = d.subtract(Duration(days: thisWeekDayNum - 1));
-    DateTime startHour = DateTime(d.year, d.month, weekStartDay.day, 8);
+    DateTime startHour =
+        DateTime(d.year, d.month, weekStartDay.day, startHourInt);
     List<ClassSession> classSessions = [];
 
     for (int i = 0; i < chromosome.genesLength; i++) {

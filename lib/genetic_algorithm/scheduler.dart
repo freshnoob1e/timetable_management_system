@@ -12,18 +12,23 @@ import 'package:timetable_management_system/model/venue.dart';
 class Scheduler {
   GeneticAlgorithm ga = GeneticAlgorithm();
   Random rm = Random();
+  int startHour = 8;
 
   void initializeInitialTimetable(
     List<Course> courses,
     int dayPeriod,
+    int startHourInt,
     int chromosomeCount,
     List<Venue> venues,
+    List<TimeSlot> deactivatedSlots,
   ) {
+    startHour = startHourInt;
     // Get timeslot
-    DateTime dayStartTime = DateTime(
-        DateTime.now().year, DateTime.now().month, DateTime.now().day, 8);
+    DateTime dayStartTime = DateTime(DateTime.now().year, DateTime.now().month,
+        DateTime.now().day, startHour);
     int lessonDayPeriod = dayPeriod;
     List<TimeSlot> timeslots = [];
+    Map<String, int> tsMap = {};
     for (int i = 0; i < lessonDayPeriod * 2; i++) {
       DateTime startTime = dayStartTime;
       startTime = startTime.add(Duration(minutes: 30 * i));
@@ -36,11 +41,27 @@ class Scheduler {
           ),
         ),
       );
+      DateTime thisDT = dayStartTime.add(Duration(minutes: 30 * i));
+      tsMap.addAll({
+        "${thisDT.hour}:${thisDT.minute}": i,
+      });
+    }
+
+    // Set deactivated timeslot
+    List<int> deactivatedSlotList = [];
+    for (var ts in deactivatedSlots) {
+      deactivatedSlotList
+          .add(tsMap["${ts.startTime.hour}:${ts.startTime.minute}"]!);
     }
 
     // Generate initial population
-    ga.population
-        .initializePopulation(chromosomeCount, courses, timeslots, venues);
+    ga.population.initializePopulation(
+      chromosomeCount,
+      courses,
+      timeslots,
+      venues,
+      deactivatedSlotList,
+    );
     ga.population.calcEachFitness();
   }
 
@@ -77,6 +98,6 @@ class Scheduler {
   }
 
   List<ClassSession> fittestTimetableClassSessions() {
-    return ga.getChromosomeClassSessions(ga.population.getFittest());
+    return ga.getChromosomeClassSessions(ga.population.getFittest(), startHour);
   }
 }

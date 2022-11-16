@@ -14,6 +14,7 @@ class Population {
   List<Chromosome> chromosomes = [];
   List<ClassSession> classSessions = [];
   late List<TimeSlot> timeslots;
+  late List<int> deactivateTimselots;
   int timeslotLength = 0;
   double fittestFitness = 0;
   Random rm = Random();
@@ -24,9 +25,11 @@ class Population {
     List<Course> courses,
     List<TimeSlot> timeslotslist,
     List<Venue> venues,
+    List<int> deactivateTimselotsList,
   ) {
     timeslots = timeslotslist;
     timeslotLength = timeslots.length;
+    deactivateTimselots = deactivateTimselotsList;
 
     popSize = populationSize;
 
@@ -66,7 +69,15 @@ class Population {
             int availableSlots = (randTimeSlotIndex - timeslotLength).abs() + 1;
 
             // If slot is enough to host lesson, add clss session
-            if (availableSlots >= slotsRequired) {
+            bool isInDeactivatedTS = false;
+
+            for (int i = 0; i < slotsRequired; i++) {
+              if (deactivateTimselots.contains(randTimeSlotIndex + i)) {
+                isInDeactivatedTS = true;
+              }
+            }
+
+            if (!isInDeactivatedTS && availableSlots >= slotsRequired) {
               ++i;
               classSessions.add(
                 ClassSession(
@@ -107,8 +118,16 @@ class Population {
 
     while (!slotFound) {
       int randStartSlot = rm.nextInt(timeSlotLength);
+      bool isInDeactivatedTS = false;
 
-      if ((timeSlotLength - randStartSlot) >= requiredSlot) {
+      for (int i = 0; i < requiredSlot; i++) {
+        if (deactivateTimselots.contains(randStartSlot + i)) {
+          isInDeactivatedTS = true;
+        }
+      }
+
+      if (!isInDeactivatedTS &&
+          (timeSlotLength - randStartSlot) >= requiredSlot) {
         slotFound = true;
         for (int i = 0; i < requiredSlot; i++) {
           newGene.occupiedSlot.add(randStartSlot + i);
