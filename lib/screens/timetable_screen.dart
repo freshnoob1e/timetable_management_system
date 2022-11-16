@@ -96,6 +96,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         event:
             "$classTypeStr, ${session.venue.venueName}&${session.course.programmeCode.programmeCode}, ${session.course.lecturer.name}",
         date: session.startTime,
+        endDate: session.endTime,
         startTime: session.startTime,
         endTime: session.endTime,
       );

@@ -15,21 +15,26 @@ class Population {
   List<ClassSession> classSessions = [];
   late List<TimeSlot> timeslots;
   late List<int> deactivateTimselots;
+  late List<int> endOfDayTimeslots;
+  late int dayTimeslotLength;
   int timeslotLength = 0;
   double fittestFitness = 0;
   Random rm = Random();
 
   // Initialize population
   void initializePopulation(
-    int populationSize,
-    List<Course> courses,
-    List<TimeSlot> timeslotslist,
-    List<Venue> venues,
-    List<int> deactivateTimselotsList,
-  ) {
+      int populationSize,
+      List<Course> courses,
+      List<TimeSlot> timeslotslist,
+      List<Venue> venues,
+      List<int> deactivateTimselotsList,
+      List<int> endOfDayTimeslotsList,
+      int dayTimeslotLength) {
+    this.dayTimeslotLength = dayTimeslotLength;
     timeslots = timeslotslist;
     timeslotLength = timeslots.length;
     deactivateTimselots = deactivateTimselotsList;
+    endOfDayTimeslots = endOfDayTimeslotsList;
 
     popSize = populationSize;
 
@@ -72,8 +77,10 @@ class Population {
             bool isInDeactivatedTS = false;
 
             for (int i = 0; i < slotsRequired; i++) {
-              if (deactivateTimselots.contains(randTimeSlotIndex + i)) {
+              if (deactivateTimselots.contains(randTimeSlotIndex + i) ||
+                  endOfDayTimeslots.contains(randTimeSlotIndex + i)) {
                 isInDeactivatedTS = true;
+                break;
               }
             }
 
@@ -121,8 +128,10 @@ class Population {
       bool isInDeactivatedTS = false;
 
       for (int i = 0; i < requiredSlot; i++) {
-        if (deactivateTimselots.contains(randStartSlot + i)) {
+        if (deactivateTimselots.contains(randStartSlot + i) ||
+            endOfDayTimeslots.contains(randStartSlot + i)) {
           isInDeactivatedTS = true;
+          break;
         }
       }
 

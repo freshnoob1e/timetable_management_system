@@ -119,33 +119,10 @@ class GeneticAlgorithm {
     }
   }
 
-  void visualizeChromosome(Chromosome chromosome, int startHourInt) {
-    print("Fitness = ${chromosome.fitness}");
-    String timeslotCell = "TIME   \t\t";
-    DateTime startHour = DateTime(2022, 1, 1, startHourInt);
-    for (int i = 0; i < population.timeslotLength; i++) {
-      DateTime currentTime = startHour.add(Duration(minutes: 30 * i));
-      timeslotCell +=
-          "${(currentTime.hour).toString().padLeft(2, "0")}:${(currentTime.minute).toString().padLeft(2, "0")}\t";
-    }
-    print(timeslotCell);
-    for (int i = 0; i < chromosome.genesLength; i++) {
-      String currentClassRow = "CLASS${i + 1}\t\t";
-      List<int> occupiedSlot = chromosome.genes[i].occupiedSlot;
-      for (int x = 0; x < population.timeslotLength; x++) {
-        if (occupiedSlot.contains(x)) {
-          currentClassRow += "|||||\t";
-        } else {
-          currentClassRow += "     \t";
-        }
-      }
-      print(currentClassRow);
-    }
-    print("\n\n");
-  }
-
   List<ClassSession> getChromosomeClassSessions(
-      Chromosome chromosome, int startHourInt) {
+    Chromosome chromosome,
+    int startHourInt,
+  ) {
     DateTime d = DateTime.now();
     int thisWeekDayNum = d.weekday;
     DateTime weekStartDay = d.subtract(Duration(days: thisWeekDayNum - 1));
@@ -158,17 +135,19 @@ class GeneticAlgorithm {
       int startSlot = occupiedSlot[0];
       int endSlot = occupiedSlot[occupiedSlot.length - 1];
 
-      DateTime startTime = startHour.add(Duration(minutes: 30 * startSlot));
-      DateTime endTime = startHour.add(Duration(minutes: 30 * (endSlot + 1)));
+      DateTime startTime = population.timeslots[startSlot].startTime;
+      DateTime endTime = population.timeslots[endSlot].endTime;
 
-      classSessions.add(ClassSession(
-        0,
-        population.classSessions[i].course,
-        population.classSessions[i].classType,
-        population.classSessions[i].venue,
-        startTime,
-        endTime,
-      ));
+      classSessions.add(
+        ClassSession(
+          0,
+          population.classSessions[i].course,
+          population.classSessions[i].classType,
+          population.classSessions[i].venue,
+          startTime,
+          endTime,
+        ),
+      );
     }
     return classSessions;
   }

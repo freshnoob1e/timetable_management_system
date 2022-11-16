@@ -26,32 +26,61 @@ class Scheduler {
     // Get timeslot
     DateTime dayStartTime = DateTime(DateTime.now().year, DateTime.now().month,
         DateTime.now().day, startHour);
+    DateTime sundayStartTime = dayStartTime.subtract(
+      Duration(days: dayStartTime.weekday),
+    );
     int lessonDayPeriod = dayPeriod;
     List<TimeSlot> timeslots = [];
     Map<String, int> tsMap = {};
-    for (int i = 0; i < lessonDayPeriod * 2; i++) {
-      DateTime startTime = dayStartTime;
-      startTime = startTime.add(Duration(minutes: 30 * i));
-      timeslots.add(
-        TimeSlot(
-          i + 1,
-          startTime,
-          startTime.add(
-            const Duration(minutes: 30),
-          ),
-        ),
+    List<int> endOfDayTSIndexes = [];
+    for (int day = 1; day <= 7; day++) {
+      DateTime startTime = sundayStartTime.add(
+        Duration(days: day),
       );
-      DateTime thisDT = dayStartTime.add(Duration(minutes: 30 * i));
-      tsMap.addAll({
-        "${thisDT.hour}:${thisDT.minute}": i,
-      });
+      for (int i = 0; i < lessonDayPeriod * 2; i++) {
+        int currentIndex =
+            (i + (lessonDayPeriod * 2 * (day - 1))) + 1 + (day - 1);
+        DateTime thisStartTime = startTime.add(Duration(minutes: 30 * i));
+        timeslots.add(
+          TimeSlot(
+            currentIndex,
+            thisStartTime,
+            thisStartTime.add(
+              const Duration(minutes: 30),
+            ),
+          ),
+        );
+        tsMap.addAll({
+          "${thisStartTime.hour}:${thisStartTime.minute};${thisStartTime.day}/${thisStartTime.month}":
+              currentIndex,
+        });
+        // Add deactivated timeslot for end of day
+        if (i == (lessonDayPeriod * 2) - 1) {
+          timeslots.add(
+            TimeSlot(
+              currentIndex,
+              thisStartTime.add(
+                const Duration(minutes: 30),
+              ),
+              thisStartTime.add(
+                const Duration(minutes: 30 * 2),
+              ),
+            ),
+          );
+          endOfDayTSIndexes.add(currentIndex);
+        }
+      }
     }
 
     // Set deactivated timeslot
     List<int> deactivatedSlotList = [];
     for (var ts in deactivatedSlots) {
-      deactivatedSlotList
-          .add(tsMap["${ts.startTime.hour}:${ts.startTime.minute}"]!);
+      String key =
+          "${ts.startTime.hour}:${ts.startTime.minute};${ts.startTime.day}/${ts.startTime.month}";
+      if (!tsMap.containsKey(key)) {
+        continue;
+      }
+      deactivatedSlotList.add(tsMap[key]! - 1);
     }
 
     // Generate initial population
@@ -61,6 +90,8 @@ class Scheduler {
       timeslots,
       venues,
       deactivatedSlotList,
+      endOfDayTSIndexes,
+      lessonDayPeriod * 2,
     );
     ga.population.calcEachFitness();
   }
