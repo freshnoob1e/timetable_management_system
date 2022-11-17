@@ -72,6 +72,12 @@ class CourseRepository {
     );
   }
 
+  static Future deleteAllCourse() async {
+    final db = await openDB();
+
+    await db.rawDelete("DELETE FROM ${Strings.courseTableName}");
+  }
+
   static Course queryMapToCourse(Map<String, dynamic> course) {
     Map<ClassType, double> lessonsHour = {};
     final lessonHourJson = json.decode(course['lessonsHour']);
