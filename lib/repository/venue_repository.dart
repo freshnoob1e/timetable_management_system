@@ -80,4 +80,10 @@ class VenueRepository {
       whereArgs: [id],
     );
   }
+
+  static Future deleteAllVenue() async {
+    final db = await openDB();
+
+    await db.rawDelete("DELETE FROM ${Strings.venueTableName}");
+  }
 }
