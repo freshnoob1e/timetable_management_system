@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
 import 'package:timetable_management_system/genetic_algorithm/population.dart';
 import 'package:timetable_management_system/genetic_algorithm/scheduler.dart';
@@ -41,7 +45,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     scheduler.initializeInitialTimetable(
       courses,
       14,
-      6,
+      8,
       25,
       venues,
       deactivatedTimeslots,
@@ -114,6 +118,102 @@ class _TimetableScreenState extends State<TimetableScreen> {
     setState(() {});
   }
 
+  Future<File> localFile() async {
+    Directory appDocDir = await getApplicationSupportDirectory();
+    String appDocPath = appDocDir.path;
+    return File("$appDocPath/${Strings.savedGenTimetableFileName}");
+  }
+
+  Future saveGeneratedTimetable() async {
+    try {
+      Map<String, Map<String, dynamic>> jsonMap = {};
+
+      List<ClassSession> sessions = scheduler.fittestTimetableClassSessions();
+
+      int i = 0;
+      for (var session in sessions) {
+        jsonMap.putIfAbsent(i.toString(), () => session.toJson());
+        i++;
+      }
+      String jsonString = json.encode(jsonMap);
+
+      File saveFile = await localFile();
+
+      saveFile.writeAsString(jsonString);
+      EasyLoading.showSuccess("Saved successful!");
+    } catch (e) {
+      EasyLoading.showError("Something went wrong...");
+    }
+  }
+
+  Future loadGeneratedTimetable() async {
+    try {
+      CalendarControllerProvider calendarControllerProvider =
+          CalendarControllerProvider.of(context);
+      for (var event in calendarControllerProvider.controller.events) {
+        calendarControllerProvider.controller.remove(event);
+      }
+
+      final file = await localFile();
+
+      final String jsonContent = await file.readAsString();
+      Map<String, dynamic> map = json.decode(jsonContent);
+
+      List<ClassSession> sessions = [];
+      map.forEach((key, value) {
+        sessions.add(ClassSession.fromJson(value));
+      });
+
+      for (ClassSession session in sessions) {
+        String classTypeStr = "";
+        switch (session.classType) {
+          case ClassType.lecture:
+            classTypeStr = "L";
+            break;
+          case ClassType.tutorial:
+            classTypeStr = "T";
+            break;
+          case ClassType.practical:
+            classTypeStr = "P";
+            break;
+          case ClassType.blended:
+            classTypeStr = "B";
+            break;
+          default:
+            classTypeStr = "Unknown";
+            break;
+        }
+        String eventStr =
+            "$classTypeStr, ${session.venue.venueName}&${session.course.programmeCode.programmeCode}, ${session.course.lecturer.name}";
+        bool hasClash = false;
+        if (session.isAnyHardClash(sessions)) {
+          hasClash = true;
+        }
+        if (hasClash) {
+          eventStr += "&true";
+        } else {
+          eventStr += "&false";
+        }
+
+        final event = CalendarEventData(
+          title: session.course.courseCode,
+          event: eventStr,
+          date: session.startTime,
+          endDate: session.endTime,
+          startTime: session.startTime,
+          endTime: session.endTime,
+        );
+        calendarControllerProvider.controller.add(event);
+      }
+      setState(() {});
+      EasyLoading.showSuccess("Load successful!");
+    } catch (e) {
+      print(e.toString());
+      EasyLoading.showError("Something went wrong...");
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,9 +223,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
       body: Center(
         child: Column(
           children: [
-            const Text("Timetable Screen"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            const SizedBox(
+              height: 15,
+            ),
+            Wrap(
+              runSpacing: 10,
+              spacing: 10,
               children: [
                 ElevatedButton(
                   onPressed: () {
@@ -184,6 +287,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
+                    EasyLoading.show(status: "Loading from last saved");
+                    await loadGeneratedTimetable();
+                  },
+                  child: const Text("Load last saved timetable"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
                     EasyLoading.show(status: "Generating...");
 
                     List<Course> courses =
@@ -209,14 +319,15 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         child: const Text("Optimize table"),
                       )
                     : Container(),
-                // generatedTimetable
-                //     ? ElevatedButton(
-                //         onPressed: () {
-                //           refreshTimetable();
-                //         },
-                //         child: const Text("DEBUG: Refresh table"),
-                //       )
-                //     : Container(),
+                generatedTimetable
+                    ? ElevatedButton(
+                        onPressed: () async {
+                          EasyLoading.show(status: "Saving timtable...");
+                          await saveGeneratedTimetable();
+                        },
+                        child: const Text("Save generated timetable"),
+                      )
+                    : Container(),
               ],
             ),
             Expanded(

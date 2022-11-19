@@ -20,6 +20,29 @@ class ClassSession {
     this.endTime,
   );
 
+  ClassSession.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        course = Course.fromJson(json['course']),
+        classType = ClassType.values[json['classType']],
+        venue = Venue.fromJson(json['venue']),
+        startTime = DateTime.parse(json['startTime']),
+        endTime = DateTime.parse(json['endTime']);
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "course": course.toJson(),
+      "classType": classType.index,
+      "venue": venue.toJson(),
+      "startTime": "${startTime.year}-${startTime.month.toString().padLeft(2, '0')}"
+          "-${startTime.day.toString().padLeft(2, '0')} "
+          "${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:${startTime.second.toString().padLeft(2, '0')}",
+      "endTime": "${endTime.year}-${endTime.month.toString().padLeft(2, '0')}"
+          "-${endTime.day.toString().padLeft(2, '0')} "
+          "${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:${endTime.second.toString().padLeft(2, '0')}",
+    };
+  }
+
   bool isClash(ClassSession targetSession) {
     if (targetSession.id == id) {
       return false;

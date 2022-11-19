@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:timetable_management_system/model/course.dart';
 import 'package:timetable_management_system/model/lecturer.dart';
 import 'package:timetable_management_system/model/programme.dart';
@@ -327,122 +328,127 @@ class _CourseScreenState extends State<CourseScreen> {
     List<String> practicalHours,
     List<String> blendedHours,
   ) async {
-    List<List<String>> argumentLists = [
-      lectNames,
-      progCodes,
-      courseCodes,
-      courseDescs,
-      lectureHours,
-      tutorialHours,
-      practicalHours,
-      blendedHours,
-    ];
-    List<Lecturer> existingLecturers =
-        await LecturerRepository.retrieveLecturers();
-    List<Programme> existingProgs =
-        await ProgrammeRepository.retrieveProgrammes();
+    try {
+      List<List<String>> argumentLists = [
+        lectNames,
+        progCodes,
+        courseCodes,
+        courseDescs,
+        lectureHours,
+        tutorialHours,
+        practicalHours,
+        blendedHours,
+      ];
+      List<Lecturer> existingLecturers =
+          await LecturerRepository.retrieveLecturers();
+      List<Programme> existingProgs =
+          await ProgrammeRepository.retrieveProgrammes();
 
-    // Check if data has equal row
-    bool isValidCSVData = true;
-    List<int> listsLength = [];
+      // Check if data has equal row
+      bool isValidCSVData = true;
+      List<int> listsLength = [];
 
-    for (var list in argumentLists) {
-      listsLength.add(list.length);
-    }
-
-    if (listsLength.toSet().length != 1) {
-      isValidCSVData = false;
-    }
-
-    // Check if lecturer and programme code exists in database
-
-    if (isValidCSVData) {
-      List<String> existingLectNames = [];
-      for (Lecturer lect in existingLecturers) {
-        existingLectNames.add(lect.name);
+      for (var list in argumentLists) {
+        listsLength.add(list.length);
       }
-      for (String lectName in lectNames) {
-        if (!existingLectNames.contains(lectName)) {
-          isValidCSVData = false;
-          break;
+
+      if (listsLength.toSet().length != 1) {
+        isValidCSVData = false;
+      }
+
+      // Check if lecturer and programme code exists in database
+
+      if (isValidCSVData) {
+        List<String> existingLectNames = [];
+        for (Lecturer lect in existingLecturers) {
+          existingLectNames.add(lect.name);
         }
-      }
-    }
-
-    if (isValidCSVData) {
-      List<String> existingProgCodes = [];
-      for (Programme prog in existingProgs) {
-        existingProgCodes.add(prog.programmeCode);
-      }
-      for (String progCode in progCodes) {
-        if (!existingProgCodes.contains(progCode)) {
-          isValidCSVData = false;
-          break;
-        }
-      }
-    }
-
-    // Check if lesson hours data is valid (Not empty and is number)
-    if (isValidCSVData) {
-      for (int x = 4; x < argumentLists.length; x++) {
-        for (String hours in argumentLists[x]) {
-          if (hours.isEmpty || double.tryParse(hours) == null) {
+        for (String lectName in lectNames) {
+          if (!existingLectNames.contains(lectName)) {
             isValidCSVData = false;
             break;
           }
         }
-        if (!isValidCSVData) {
-          break;
-        }
-      }
-    }
-
-    if (!isValidCSVData) {
-      throw Exception("Invalid CSV Data");
-    }
-
-    Map<String, Lecturer> lectNameMap = {};
-    Map<String, Programme> progNameMap = {};
-
-    for (Lecturer lect in existingLecturers) {
-      lectNameMap.addAll({lect.name: lect});
-    }
-    for (Programme prog in existingProgs) {
-      progNameMap.addAll({prog.programmeCode: prog});
-    }
-
-    for (int x = 0; x < lectNames.length; x++) {
-      Lecturer thisCourseLect = lectNameMap[lectNames[x]]!;
-      Programme thisCourseProg = progNameMap[progCodes[x]]!;
-      Map<ClassType, double> lessonsHours = {};
-
-      for (int y = 4; y < argumentLists.length; y++) {
-        late ClassType currentClassType;
-        if (y == 4) {
-          currentClassType = ClassType.lecture;
-        } else if (y == 5) {
-          currentClassType = ClassType.tutorial;
-        } else if (y == 6) {
-          currentClassType = ClassType.practical;
-        } else {
-          currentClassType = ClassType.blended;
-        }
-
-        lessonsHours
-            .addAll({currentClassType: double.parse(argumentLists[y][x])});
       }
 
-      Course newCourse = Course(
-        null,
-        thisCourseLect,
-        thisCourseProg,
-        courseCodes[x],
-        courseDescs[x],
-        lessonsHours,
-      );
-      await CourseRepository.insertCourse(newCourse);
+      if (isValidCSVData) {
+        List<String> existingProgCodes = [];
+        for (Programme prog in existingProgs) {
+          existingProgCodes.add(prog.programmeCode);
+        }
+        for (String progCode in progCodes) {
+          if (!existingProgCodes.contains(progCode)) {
+            isValidCSVData = false;
+            break;
+          }
+        }
+      }
+
+      // Check if lesson hours data is valid (Not empty and is number)
+      if (isValidCSVData) {
+        for (int x = 4; x < argumentLists.length; x++) {
+          for (String hours in argumentLists[x]) {
+            if (hours.isEmpty || double.tryParse(hours) == null) {
+              isValidCSVData = false;
+              break;
+            }
+          }
+          if (!isValidCSVData) {
+            break;
+          }
+        }
+      }
+
+      if (!isValidCSVData) {
+        throw Exception("Invalid CSV Data");
+      }
+
+      Map<String, Lecturer> lectNameMap = {};
+      Map<String, Programme> progNameMap = {};
+
+      for (Lecturer lect in existingLecturers) {
+        lectNameMap.addAll({lect.name: lect});
+      }
+      for (Programme prog in existingProgs) {
+        progNameMap.addAll({prog.programmeCode: prog});
+      }
+
+      for (int x = 0; x < lectNames.length; x++) {
+        Lecturer thisCourseLect = lectNameMap[lectNames[x]]!;
+        Programme thisCourseProg = progNameMap[progCodes[x]]!;
+        Map<ClassType, double> lessonsHours = {};
+
+        for (int y = 4; y < argumentLists.length; y++) {
+          late ClassType currentClassType;
+          if (y == 4) {
+            currentClassType = ClassType.lecture;
+          } else if (y == 5) {
+            currentClassType = ClassType.tutorial;
+          } else if (y == 6) {
+            currentClassType = ClassType.practical;
+          } else {
+            currentClassType = ClassType.blended;
+          }
+
+          lessonsHours
+              .addAll({currentClassType: double.parse(argumentLists[y][x])});
+        }
+
+        Course newCourse = Course(
+          null,
+          thisCourseLect,
+          thisCourseProg,
+          courseCodes[x],
+          courseDescs[x],
+          lessonsHours,
+        );
+        await CourseRepository.insertCourse(newCourse);
+      }
+      setState(() {});
+    } on Exception catch (e) {
+      print(e);
+      EasyLoading.showError("Something went wrong...");
     }
-    setState(() {});
   }
 
   Future importCourses() async {

@@ -8,7 +8,22 @@ class Venue {
 
   Venue(this.id, this.venueName, this.venueCapacity, this.venueType);
 
+  Venue.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        venueName = json['venueName'],
+        venueCapacity = json['venueCapacity'],
+        venueType = VenueType.values[json['venueType']];
+
   Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "venueName": venueName,
+      "venueCapacity": venueCapacity,
+      "venueType": venueType.index,
+    };
+  }
+
+  Map<String, dynamic> toJson() {
     return {
       "id": id,
       "venueName": venueName,

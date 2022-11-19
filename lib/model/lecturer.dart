@@ -4,7 +4,18 @@ class Lecturer {
 
   Lecturer(this.id, this.name);
 
+  Lecturer.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        name = json['name'];
+
   Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "name": name,
+    };
+  }
+
+  Map<String, dynamic> toJson() {
     return {
       "id": id,
       "name": name,
