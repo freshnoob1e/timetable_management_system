@@ -31,6 +31,7 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
       TextFormField(
         controller: newProgCodeController,
         decoration: const InputDecoration(
+          label: Text("Programme Code"),
           hintText: "Programme's code (e.x. RSDY1S2)",
         ),
         validator: (value) {
@@ -52,6 +53,7 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
       TextFormField(
         controller: editProgCodeController,
         decoration: const InputDecoration(
+          label: Text("Programme Code"),
           hintText: "Programme's code (e.x. RSDY1S2)",
         ),
         validator: (value) {

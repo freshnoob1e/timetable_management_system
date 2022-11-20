@@ -31,6 +31,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
       TextFormField(
         controller: newLectNameController,
         decoration: const InputDecoration(
+          label: Text("Lecturer name"),
           hintText: "Lecturer's name (e.x. Mr Thomas Tan Ah Kao)",
         ),
         validator: (value) {
@@ -51,6 +52,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
       TextFormField(
         controller: editLectNameController,
         decoration: const InputDecoration(
+          label: Text("Lecturer name"),
           hintText: "Lecturer's name (e.x. Mr Thomas Tan Ah Kao)",
         ),
         validator: (value) {

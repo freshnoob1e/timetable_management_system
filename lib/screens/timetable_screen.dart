@@ -61,6 +61,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       TextFormField(
         controller: chromCountController,
         decoration: const InputDecoration(
+          label: Text("Chromosome Count"),
           hintText: "More chromosome = more memory(RAM) required",
         ),
         validator: (value) {
@@ -76,7 +77,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
       TextFormField(
         controller: maxGenController,
         decoration: const InputDecoration(
-          hintText: "Venue's name (e.x. D101)",
+          label: Text("Max Generation"),
+          hintText:
+              "Higher generation will take more time to complete optimization",
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -91,7 +94,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
       TextFormField(
         controller: toleratedConfController,
         decoration: const InputDecoration(
-          hintText: "Venue's name (e.x. D101)",
+          label: Text("Tolerated Conflict (0 = no conflict)"),
+          hintText: "Algorithm will stop when conflict reach this number",
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {

@@ -38,6 +38,7 @@ class _VenueScreenState extends State<VenueScreen> {
       TextFormField(
         controller: newVenueNameController,
         decoration: const InputDecoration(
+          label: Text("Venue Name"),
           hintText: "Venue's name (e.x. D101)",
         ),
         validator: (value) {
@@ -80,6 +81,7 @@ class _VenueScreenState extends State<VenueScreen> {
       TextFormField(
         controller: editVenueNameController,
         decoration: const InputDecoration(
+          label: Text("Venue Name"),
           hintText: "Venue's name (e.x. D101)",
         ),
         validator: (value) {

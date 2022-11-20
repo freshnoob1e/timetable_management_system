@@ -92,6 +92,7 @@ class _CourseScreenState extends State<CourseScreen> {
       TextFormField(
         controller: newCourseCodeController,
         decoration: const InputDecoration(
+          label: Text("Course Code"),
           hintText: "Course Code (e.x. BAIT1234)",
         ),
         validator: (value) {
@@ -105,6 +106,7 @@ class _CourseScreenState extends State<CourseScreen> {
       TextFormField(
         controller: newCourseDescController,
         decoration: const InputDecoration(
+          label: Text("Course Description"),
           hintText: "Course Description",
         ),
       ),
@@ -187,6 +189,7 @@ class _CourseScreenState extends State<CourseScreen> {
       TextFormField(
         controller: editCourseCodeController,
         decoration: const InputDecoration(
+          label: Text("Course Code"),
           hintText: "Course Code (e.x. BAIT1234)",
         ),
         validator: (value) {
@@ -200,6 +203,7 @@ class _CourseScreenState extends State<CourseScreen> {
       TextFormField(
         controller: editCourseDescController,
         decoration: const InputDecoration(
+          label: Text("Course Description"),
           hintText: "Course Description",
         ),
       ),
