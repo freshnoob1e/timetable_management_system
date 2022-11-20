@@ -2,17 +2,18 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:calendar_view/calendar_view.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:intl/intl.dart';
+import 'package:path/path.dart' as Path;
 import 'package:path_provider/path_provider.dart';
 import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
 import 'package:timetable_management_system/genetic_algorithm/population.dart';
 import 'package:timetable_management_system/genetic_algorithm/scheduler.dart';
 import 'package:timetable_management_system/model/class_session.dart';
 import 'package:timetable_management_system/model/course.dart';
-import 'package:timetable_management_system/model/lecturer.dart';
-import 'package:timetable_management_system/model/programme.dart';
 import 'package:timetable_management_system/model/timeslot.dart';
 import 'package:timetable_management_system/model/venue.dart';
 import 'package:timetable_management_system/repository/app_setting_repository.dart';
@@ -24,6 +25,7 @@ import 'package:timetable_management_system/screens/manage_timeslot_screen.dart'
 import 'package:timetable_management_system/screens/programme_screen.dart';
 import 'package:timetable_management_system/screens/venue_screen.dart';
 import 'package:timetable_management_system/utility/class_type.dart';
+import 'package:timetable_management_system/utility/color_hex.dart';
 import 'package:timetable_management_system/utility/values/strings.dart';
 
 class TimetableScreen extends StatefulWidget {
@@ -433,6 +435,314 @@ class _TimetableScreenState extends State<TimetableScreen> {
     });
   }
 
+  void createExcelFile() {
+    if (sessions.isEmpty) {
+      EasyLoading.showError("There are not session to export");
+      return;
+    }
+    var xlsx = Excel.createExcel();
+
+    // Master Timetable
+    Sheet defaultSheet = xlsx.sheets[xlsx.getDefaultSheet()]!;
+
+    // Header
+    CellStyle headerCellStyle =
+        CellStyle(bold: true, horizontalAlign: HorizontalAlign.Center);
+    defaultSheet.merge(
+      CellIndex.indexByString("A3"),
+      CellIndex.indexByString("Z3"),
+    );
+    defaultSheet.cell(CellIndex.indexByString("A3")).value =
+        "TUNKU ABDUL RAHMAN UNIVERSITY OF MANAGEMENT AND TECHNOLOGY";
+    defaultSheet.cell(CellIndex.indexByString("A3")).cellStyle =
+        headerCellStyle;
+    defaultSheet.merge(
+      CellIndex.indexByString("A4"),
+      CellIndex.indexByString("Z4"),
+    );
+    defaultSheet.cell(CellIndex.indexByString("A4")).value = "PAHANG BRANCH";
+    defaultSheet.cell(CellIndex.indexByString("A4")).cellStyle =
+        headerCellStyle;
+    defaultSheet.merge(
+      CellIndex.indexByString("A5"),
+      CellIndex.indexByString("Z5"),
+    );
+    defaultSheet.cell(CellIndex.indexByString("A5")).value = "MASTER TIMETABLE";
+    defaultSheet.cell(CellIndex.indexByString("A5")).cellStyle =
+        headerCellStyle;
+
+    // Get list of programme for rendering organized timetable
+    List<String> progNames = [];
+    Map<String, ClassSession> sessionsMap = {};
+    for (ClassSession session in sessions) {
+      progNames.add(session.course.programmeCode.programmeCode);
+    }
+    // Make unique programme name list
+    progNames = progNames.toSet().toList();
+    Map<int, Map<String, List<ClassSession>>> loopMap = {};
+    for (ClassSession session in sessions) {
+      // If key exists, update map
+      loopMap.update(
+        session.startTime.weekday,
+        (Map<String, List<ClassSession>> value) {
+          // If key exists
+          // Get list from programme and add new session
+          // Else
+          // Initiate new session list
+          // Then update map
+          List<ClassSession> classSessions = [];
+          Map<String, List<ClassSession>> newMap = value;
+          if (value.containsKey(session.course.programmeCode.programmeCode)) {
+            classSessions = value[session.course.programmeCode.programmeCode]!;
+            classSessions.add(session);
+          } else {
+            classSessions = [session];
+          }
+          newMap.addAll(
+              {session.course.programmeCode.programmeCode: classSessions});
+
+          return newMap;
+        },
+        ifAbsent: () => {
+          session.course.programmeCode.programmeCode: [session]
+        },
+      );
+    }
+    loopMap = Map.fromEntries(
+      loopMap.entries.toList()
+        ..sort(
+          (a, b) => a.key.compareTo(b.key),
+        ),
+    );
+
+    // Map timeslot to col index
+    Map<String, int> timeslotMap = {};
+    DateTime d = DateTime.now();
+    // only need the hour & min
+    d = DateTime(d.year, d.month, d.day, 8, 0);
+    for (int x = 2; x <= 25; x++) {
+      DateTime currentStartTime = d.add(
+        Duration(
+          minutes: 30 * (x - 2),
+        ),
+      );
+      timeslotMap.addAll(
+        {
+          DateFormat('H:m').format(currentStartTime): x,
+        },
+      );
+    }
+
+    // Create master timetable
+    int currentRow = 8;
+
+    loopMap.forEach((int k, Map<String, List<ClassSession>> v) {
+      timetableRowHeader(defaultSheet, currentRow);
+      currentRow++;
+      // Monday - Sunday
+      // Set Week Days
+      defaultSheet.merge(
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: currentRow,
+        ),
+        CellIndex.indexByColumnRow(
+          columnIndex: 0,
+          rowIndex: currentRow + (progNames.length * 5) - 1,
+        ),
+      );
+      String weekDayStr = "";
+      if (k == 1) {
+        weekDayStr = "Monday";
+      } else if (k == 2) {
+        weekDayStr = "Tuesday";
+      } else if (k == 3) {
+        weekDayStr = "Wednesday";
+      } else if (k == 4) {
+        weekDayStr = "Thursday";
+      } else if (k == 5) {
+        weekDayStr = "Friday";
+      } else if (k == 6) {
+        weekDayStr = "Saturday";
+      } else if (k == 7) {
+        weekDayStr = "Sunday";
+      }
+      defaultSheet
+          .cell(
+            CellIndex.indexByColumnRow(
+              columnIndex: 0,
+              rowIndex: currentRow,
+            ),
+          )
+          .value = weekDayStr;
+      defaultSheet
+          .cell(
+            CellIndex.indexByColumnRow(
+              columnIndex: 0,
+              rowIndex: currentRow,
+            ),
+          )
+          .cellStyle = CellStyle(
+        bold: true,
+        verticalAlign: VerticalAlign.Center,
+        horizontalAlign: HorizontalAlign.Center,
+      );
+
+      // Set Programmes
+      for (int x = 0; x < progNames.length; x++) {
+        String name = progNames[x];
+        int currentClassRowIndex = (x * 5) + currentRow;
+
+        defaultSheet.merge(
+          CellIndex.indexByColumnRow(
+            columnIndex: 1,
+            rowIndex: currentClassRowIndex,
+          ),
+          CellIndex.indexByColumnRow(
+            columnIndex: 1,
+            rowIndex: currentClassRowIndex + 4,
+          ),
+        );
+        var cell = defaultSheet.cell(
+          CellIndex.indexByColumnRow(
+            columnIndex: 1,
+            rowIndex: currentClassRowIndex,
+          ),
+        );
+        cell.value = name;
+        cell.cellStyle = CellStyle(
+          verticalAlign: VerticalAlign.Center,
+          horizontalAlign: HorizontalAlign.Center,
+        );
+      }
+
+      // Set classes
+      int colorIndex = 0;
+
+      Map<String, String> colorMapping = {};
+      for (ClassSession session in sessions) {
+        colorMapping.putIfAbsent(
+          session.course.courseCode,
+          () => ColorHex.colorHexs[(colorIndex++) % ColorHex.colorHexs.length],
+        );
+      }
+
+      v.forEach((String key, List<ClassSession> value) {
+        // Each prog
+        int currentClassRowIndex = 0;
+        for (String name in progNames) {
+          if (name == key) {
+            break;
+          }
+          currentClassRowIndex++;
+        }
+
+        currentClassRowIndex = (5 * currentClassRowIndex) + currentRow;
+
+        for (ClassSession session in value) {
+          int currentClassStartColIndex =
+              timeslotMap[DateFormat('H:m').format(session.startTime)] ?? 2;
+          int currentClassEndColIndex = timeslotMap[DateFormat('H:m').format(
+                  session.endTime.subtract(const Duration(minutes: 30)))] ??
+              2;
+
+          for (int y = 0; y < 5; y++) {
+            defaultSheet.merge(
+              CellIndex.indexByColumnRow(
+                columnIndex: currentClassStartColIndex,
+                rowIndex: currentClassRowIndex + y,
+              ),
+              CellIndex.indexByColumnRow(
+                columnIndex: currentClassEndColIndex,
+                rowIndex: currentClassRowIndex + y,
+              ),
+            );
+            var cell = defaultSheet.cell(
+              CellIndex.indexByColumnRow(
+                columnIndex: currentClassStartColIndex,
+                rowIndex: currentClassRowIndex + y,
+              ),
+            );
+            cell.cellStyle = CellStyle(
+              horizontalAlign: HorizontalAlign.Center,
+              backgroundColorHex: colorMapping[session.course.courseCode]!,
+            );
+            if (y == 0) {
+              cell.value = session.course.courseCode;
+            } else if (y == 1) {
+              cell.value = session.course.courseDescription;
+            } else if (y == 2) {
+              String classType = "";
+              if (session.classType == ClassType.lecture) {
+                classType = "(L)";
+              } else if (session.classType == ClassType.tutorial) {
+                classType = "(T)";
+              } else if (session.classType == ClassType.practical) {
+                classType = "(P)";
+              } else if (session.classType == ClassType.blended) {
+                classType = "(B)";
+              }
+              cell.value =
+                  "${DateFormat('h:mma').format(session.startTime)}-${DateFormat('h:mma').format(session.endTime)} $classType";
+            } else if (y == 3) {
+              cell.value = session.course.lecturer.name;
+            } else {
+              cell.value = "";
+            }
+          }
+        }
+      });
+      currentRow = (progNames.length * 5) + currentRow;
+    });
+
+    saveExcel(xlsx);
+  }
+
+  Sheet timetableRowHeader(Sheet defaultSheet, int currentRow) {
+    // Timetable Header Row
+    var cell = defaultSheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow));
+    cell.value = "DAY/TIME";
+    cell.cellStyle =
+        CellStyle(bold: true, horizontalAlign: HorizontalAlign.Center);
+    cell = defaultSheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: currentRow));
+    cell.value = "PROG";
+    cell.cellStyle =
+        CellStyle(bold: true, horizontalAlign: HorizontalAlign.Center);
+    DateTime startDT = DateTime(DateTime.now().year, DateTime.now().month,
+        DateTime.now().day, currentRow, 0);
+    for (int x = 1; x <= 12; x++) {
+      DateTime dt1 = startDT.add(Duration(hours: x - 1));
+      DateTime dt2 = startDT.add(Duration(hours: (x + 1) - 1));
+      String value =
+          "${DateFormat('hh:mm a').format(dt1)}-${DateFormat('hh:mm a').format(dt2)}";
+      defaultSheet.merge(
+        CellIndex.indexByColumnRow(rowIndex: currentRow, columnIndex: (x * 2)),
+        CellIndex.indexByColumnRow(
+            rowIndex: currentRow, columnIndex: (x * 2) + 1),
+      );
+      defaultSheet
+          .cell(CellIndex.indexByColumnRow(
+              rowIndex: currentRow, columnIndex: (x * 2)))
+          .value = value;
+      defaultSheet
+              .cell(CellIndex.indexByColumnRow(
+                  rowIndex: currentRow, columnIndex: (x * 2)))
+              .cellStyle =
+          CellStyle(bold: true, horizontalAlign: HorizontalAlign.Center);
+    }
+    return defaultSheet;
+  }
+
+  void saveExcel(Excel xlsx) {
+    var fileByte = xlsx.save();
+
+    File(Path.join("/home/jazchan/Work/Tarc/fyp/testXlsx/testData.xlsx"))
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(fileByte!);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -546,6 +856,16 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           await saveGeneratedTimetable();
                         },
                         child: const Text("Save generated timetable"),
+                      )
+                    : Container(),
+                generatedTimetable
+                    ? ElevatedButton(
+                        onPressed: () {
+                          EasyLoading.show(status: "Exporting timtable...");
+                          createExcelFile();
+                          EasyLoading.showSuccess("test complete");
+                        },
+                        child: const Text("Export generated timetable"),
                       )
                     : Container(),
               ],
