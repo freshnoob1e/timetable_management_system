@@ -736,6 +736,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 
   void saveExcel(Excel xlsx) {
+    // TODO save in selected folder
     var fileByte = xlsx.save();
 
     File(Path.join("/home/jazchan/Work/Tarc/fyp/testXlsx/testData.xlsx"))
