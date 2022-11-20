@@ -707,8 +707,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
     cell.value = "PROG";
     cell.cellStyle =
         CellStyle(bold: true, horizontalAlign: HorizontalAlign.Center);
-    DateTime startDT = DateTime(DateTime.now().year, DateTime.now().month,
-        DateTime.now().day, currentRow, 0);
+    DateTime startDT = DateTime(
+        DateTime.now().year, DateTime.now().month, DateTime.now().day, 8, 0);
     for (int x = 1; x <= 12; x++) {
       DateTime dt1 = startDT.add(Duration(hours: x - 1));
       DateTime dt2 = startDT.add(Duration(hours: (x + 1) - 1));
