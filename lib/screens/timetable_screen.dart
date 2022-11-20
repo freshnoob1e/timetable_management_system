@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
 import 'package:timetable_management_system/genetic_algorithm/population.dart';
@@ -733,13 +732,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
     return defaultSheet;
   }
 
-  void saveExcel(Excel xlsx) {
-    // TODO save in selected folder
+  void saveExcel(Excel xlsx) async {
     var fileByte = xlsx.save();
 
-    File(path.join("/home/jazchan/Work/Tarc/fyp/testXlsx/testData.xlsx"))
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    String appDocPath = appDocDir.path;
+
+    File("$appDocPath/export_timetable.xlsx")
       ..createSync(recursive: true)
       ..writeAsBytesSync(fileByte!);
+
+    EasyLoading.showSuccess(
+        "Success, file saved in ${"$appDocPath/export_timetable.xlsx"}",
+        duration: const Duration(seconds: 10));
   }
 
   @override
@@ -862,7 +867,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         onPressed: () {
                           EasyLoading.show(status: "Exporting timtable...");
                           createExcelFile();
-                          EasyLoading.showSuccess("Export Complete!");
+                          // EasyLoading.showSuccess("Export Complete!");
                         },
                         child: const Text("Export generated timetable"),
                       )
