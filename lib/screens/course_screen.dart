@@ -649,12 +649,16 @@ class _CourseScreenState extends State<CourseScreen> {
                 ),
               ],
             ),
+            const SizedBox(
+              height: 35,
+            ),
             Container(
               decoration: BoxDecoration(
                 border: Border.all(),
               ),
               child: SizedBox(
-                height: 600,
+                height: MediaQuery.of(context).size.height * 0.8,
+                width: double.infinity,
                 child: FutureBuilder(
                   future: CourseRepository.retrieveCourses(),
                   builder: (context, snapshot) {
@@ -662,7 +666,125 @@ class _CourseScreenState extends State<CourseScreen> {
                       return Container();
                     }
                     if (!snapshot.hasData) return Container();
-                    return ListView.builder(
+                    return SingleChildScrollView(
+                      child: DataTable(
+                        columns: const [
+                          DataColumn(label: Text("Course Code")),
+                          DataColumn(label: Text("Course Description")),
+                          DataColumn(label: Text("Lecturer")),
+                          DataColumn(label: Text("Programme")),
+                          DataColumn(label: Text("Actions")),
+                        ],
+                        rows: List.generate(snapshot.data!.length, (index) {
+                          Course course = snapshot.data![index];
+                          return DataRow(cells: [
+                            DataCell(
+                                Text("${index + 1}. ${course.courseCode}")),
+                            DataCell(Text(course.courseDescription ?? "")),
+                            DataCell(Text(course.lecturer.name)),
+                            DataCell(Text(course.programmeCode.programmeCode)),
+                            DataCell(
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          content: FutureBuilder(
+                                            future: editCourseDialogForm(
+                                              course.id!,
+                                            ),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState !=
+                                                  ConnectionState.done) {
+                                                return Container();
+                                              }
+                                              if (!snapshot.hasData) {
+                                                return Container();
+                                              }
+                                              return Form(
+                                                key: _editCourseFormKey,
+                                                child: Column(
+                                                  children: [
+                                                    ...snapshot.data!,
+                                                    ElevatedButton(
+                                                      onPressed: () async {
+                                                        await updateCourse(
+                                                            course.id!);
+                                                      },
+                                                      child: const Text(
+                                                          "Update Course"),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    icon: const Icon(Icons.edit),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          content: Column(
+                                            children: [
+                                              const Center(
+                                                child: Text("Confirm Delete?"),
+                                              ),
+                                              const SizedBox(
+                                                height: 50,
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  ElevatedButton(
+                                                    style: const ButtonStyle(
+                                                      backgroundColor:
+                                                          MaterialStatePropertyAll(
+                                                        Colors.red,
+                                                      ),
+                                                    ),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                      context,
+                                                    ),
+                                                    child: const Text("NO"),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 20,
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      removeCourse(
+                                                        course.id!,
+                                                      );
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text("YES"),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    icon: const Icon(Icons.delete_forever),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ]);
+                        }),
+                      ),
+                    );
+                    ListView.builder(
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         Course course = snapshot.data![index];
@@ -674,6 +796,9 @@ class _CourseScreenState extends State<CourseScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text("${index + 1}. ${course.courseCode}"),
+                              Text(course.courseDescription ?? ""),
+                              Text(course.lecturer.name),
+                              Text(course.programmeCode.programmeCode),
                               Row(
                                 children: [
                                   IconButton(

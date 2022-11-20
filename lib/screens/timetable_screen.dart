@@ -864,7 +864,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         onPressed: () {
                           EasyLoading.show(status: "Exporting timtable...");
                           createExcelFile();
-                          EasyLoading.showSuccess("test complete");
+                          EasyLoading.showSuccess("Export Complete!");
                         },
                         child: const Text("Export generated timetable"),
                       )
