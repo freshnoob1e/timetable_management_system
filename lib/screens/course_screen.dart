@@ -313,7 +313,7 @@ class _CourseScreenState extends State<CourseScreen> {
         blendedHourList,
       ];
     } catch (e) {
-      print(e.toString());
+      EasyLoading.showError("Something went wrong...");
       return [];
     }
   }
@@ -445,8 +445,7 @@ class _CourseScreenState extends State<CourseScreen> {
         await CourseRepository.insertCourse(newCourse);
       }
       setState(() {});
-    } on Exception catch (e) {
-      print(e);
+    } catch (e) {
       EasyLoading.showError("Something went wrong...");
     }
   }
@@ -783,121 +782,6 @@ class _CourseScreenState extends State<CourseScreen> {
                           ]);
                         }),
                       ),
-                    );
-                    ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        Course course = snapshot.data![index];
-                        return Container(
-                          decoration: index % 2 != 0
-                              ? const BoxDecoration(color: Colors.black12)
-                              : null,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text("${index + 1}. ${course.courseCode}"),
-                              Text(course.courseDescription ?? ""),
-                              Text(course.lecturer.name),
-                              Text(course.programmeCode.programmeCode),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          content: FutureBuilder(
-                                            future: editCourseDialogForm(
-                                              course.id!,
-                                            ),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState !=
-                                                  ConnectionState.done) {
-                                                return Container();
-                                              }
-                                              if (!snapshot.hasData) {
-                                                return Container();
-                                              }
-                                              return Form(
-                                                key: _editCourseFormKey,
-                                                child: Column(
-                                                  children: [
-                                                    ...snapshot.data!,
-                                                    ElevatedButton(
-                                                      onPressed: () async {
-                                                        await updateCourse(
-                                                            course.id!);
-                                                      },
-                                                      child: const Text(
-                                                          "Update Course"),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    icon: const Icon(Icons.edit),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          content: Column(
-                                            children: [
-                                              const Center(
-                                                child: Text("Confirm Delete?"),
-                                              ),
-                                              const SizedBox(
-                                                height: 50,
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  ElevatedButton(
-                                                    style: const ButtonStyle(
-                                                      backgroundColor:
-                                                          MaterialStatePropertyAll(
-                                                        Colors.red,
-                                                      ),
-                                                    ),
-                                                    onPressed: () =>
-                                                        Navigator.pop(
-                                                      context,
-                                                    ),
-                                                    child: const Text("NO"),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 20,
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      removeCourse(
-                                                        course.id!,
-                                                      );
-                                                      Navigator.pop(context);
-                                                    },
-                                                    child: const Text("YES"),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    icon: const Icon(Icons.delete_forever),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
                     );
                   },
                 ),

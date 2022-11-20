@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:timetable_management_system/model/venue.dart';
 import 'package:timetable_management_system/repository/venue_repository.dart';
 import 'package:timetable_management_system/utility/csvReader/timetable_csv_reader.dart';
@@ -154,7 +155,7 @@ class _VenueScreenState extends State<VenueScreen> {
       List<dynamic> venueTypeList = listOfColumnsData[1];
       return [venueNameList, venueTypeList];
     } catch (e) {
-      print(e.toString());
+      EasyLoading.showError("Something went wrong...");
       return [];
     }
   }

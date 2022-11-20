@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:timetable_management_system/model/programme.dart';
 import 'package:timetable_management_system/repository/programme_repository.dart';
 import 'package:timetable_management_system/utility/csvReader/timetable_csv_reader.dart';
@@ -96,7 +97,7 @@ class _ProgrammeScreenState extends State<ProgrammeScreen> {
     try {
       return await TimetableCSVReader.getCSVColumn("Programme");
     } catch (e) {
-      print(e.toString());
+      EasyLoading.showError("Something went wrong...");
       return [];
     }
   }

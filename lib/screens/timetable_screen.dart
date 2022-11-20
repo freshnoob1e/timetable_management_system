@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as Path;
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
 import 'package:timetable_management_system/genetic_algorithm/population.dart';
@@ -296,7 +296,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
       setState(() {});
       EasyLoading.showSuccess("Load successful!");
     } catch (e) {
-      print(e.toString());
       EasyLoading.showError("Something went wrong...");
       return 0;
     }
@@ -473,7 +472,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     // Get list of programme for rendering organized timetable
     List<String> progNames = [];
-    Map<String, ClassSession> sessionsMap = {};
     for (ClassSession session in sessions) {
       progNames.add(session.course.programmeCode.programmeCode);
     }
@@ -739,7 +737,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     // TODO save in selected folder
     var fileByte = xlsx.save();
 
-    File(Path.join("/home/jazchan/Work/Tarc/fyp/testXlsx/testData.xlsx"))
+    File(path.join("/home/jazchan/Work/Tarc/fyp/testXlsx/testData.xlsx"))
       ..createSync(recursive: true)
       ..writeAsBytesSync(fileByte!);
   }

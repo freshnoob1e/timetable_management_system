@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:timetable_management_system/model/lecturer.dart';
 import 'package:timetable_management_system/repository/lecturer_repository.dart';
 import 'package:timetable_management_system/utility/csvReader/timetable_csv_reader.dart';
@@ -95,7 +96,7 @@ class _LecturerScreenState extends State<LecturerScreen> {
     try {
       return await TimetableCSVReader.getCSVColumn("Lecturer");
     } catch (e) {
-      print(e.toString());
+      EasyLoading.showError("Something went wrong...");
       return [];
     }
   }
