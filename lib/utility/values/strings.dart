@@ -35,4 +35,7 @@ class Strings {
       "CREATE TABLE $appSettingTableName(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)";
   static const String deactivatedTimeslotTableSQL =
       "CREATE TABLE $deactivatedTimeslotTableName(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, startTime TEXT, endTime TEXT)";
+  static const String chromosomeCountPrefKey = "ChromosomeCount";
+  static const String maxGenPrefKey = "MaxGeneration";
+  static const String toleratedConflictPrefKey = "ToleratedConflict";
 }

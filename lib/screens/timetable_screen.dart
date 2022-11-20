@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timetable_management_system/genetic_algorithm/optimize_isolate_model.dart';
 import 'package:timetable_management_system/genetic_algorithm/population.dart';
 import 'package:timetable_management_system/genetic_algorithm/scheduler.dart';
@@ -43,6 +44,87 @@ class _TimetableScreenState extends State<TimetableScreen> {
   String currentCourseVal = "";
   String currentProgVal = "";
   String currentLectVal = "";
+  final GlobalKey<FormState> _algoSettingFormKey = GlobalKey<FormState>();
+  final chromCountController = TextEditingController();
+  final maxGenController = TextEditingController();
+  final toleratedConfController = TextEditingController();
+
+  List<Widget> algoSettingDialogForm(
+    String currentChromCount,
+    String currentMaxGen,
+    String currentTolerated,
+  ) {
+    chromCountController.text = currentChromCount;
+    maxGenController.text = currentMaxGen;
+    toleratedConfController.text = currentTolerated;
+    return [
+      TextFormField(
+        controller: chromCountController,
+        decoration: const InputDecoration(
+          hintText: "More chromosome = more memory(RAM) required",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter a number";
+          }
+          if (int.tryParse(value) == null) {
+            return "Please enter a valid integer (e.x 1-100)";
+          }
+          return null;
+        },
+      ),
+      TextFormField(
+        controller: maxGenController,
+        decoration: const InputDecoration(
+          hintText: "Venue's name (e.x. D101)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter a number";
+          }
+          if (int.tryParse(value) == null) {
+            return "Please enter a valid integer (e.x 1-100)";
+          }
+          return null;
+        },
+      ),
+      TextFormField(
+        controller: toleratedConfController,
+        decoration: const InputDecoration(
+          hintText: "Venue's name (e.x. D101)",
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter a number";
+          }
+          if (int.tryParse(value) == null) {
+            return "Please enter a valid integer (e.x 1-100)";
+          }
+          return null;
+        },
+      ),
+    ];
+  }
+
+  Future saveAlgoSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (!_algoSettingFormKey.currentState!.validate()) return;
+
+    await prefs.setInt(
+      Strings.chromosomeCountPrefKey,
+      int.parse(chromCountController.text),
+    );
+    await prefs.setInt(
+      Strings.maxGenPrefKey,
+      int.parse(maxGenController.text),
+    );
+    await prefs.setInt(
+      Strings.toleratedConflictPrefKey,
+      int.parse(toleratedConfController.text),
+    );
+    EasyLoading.showSuccess("Saved successfully!");
+  }
 
   Future generateTimetable(List<Course> courses, List<Venue> venues) async {
     scheduler = Scheduler();
@@ -50,23 +132,30 @@ class _TimetableScreenState extends State<TimetableScreen> {
     List<TimeSlot> deactivatedTimeslots =
         await AppSettingRepository.retrieveDeactivatedTimeslots();
 
-    //TODO remove hard coded value (day period/chromosome count)
+    final prefs = await SharedPreferences.getInstance();
+
+    int chromosomeCount = prefs.getInt(Strings.chromosomeCountPrefKey) ?? 25;
     scheduler.initializeInitialTimetable(
       courses,
       14,
       8,
-      25,
+      chromosomeCount,
       venues,
       deactivatedTimeslots,
     );
   }
 
-  void optimizeTimetable() {
+  Future optimizeTimetable() async {
     scheduler.ga.generationCount = 0;
+
+    final prefs = await SharedPreferences.getInstance();
 
     compute<OptimizeIsolateModel, Population>(
       scheduler.optimize,
-      OptimizeIsolateModel(toleratedConflicts: 0),
+      OptimizeIsolateModel(
+        toleratedConflicts: prefs.getInt(Strings.toleratedConflictPrefKey) ?? 0,
+        maxGeneration: prefs.getInt(Strings.maxGenPrefKey) ?? 5000,
+      ),
     ).then((newPopulation) {
       scheduler.ga.population = newPopulation;
       refreshTimetable();
@@ -820,6 +909,52 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    String chromCount =
+                        prefs.getInt(Strings.chromosomeCountPrefKey) == null
+                            ? "25"
+                            : prefs
+                                .getInt(Strings.chromosomeCountPrefKey)
+                                .toString();
+                    String maxGen = prefs.getInt(Strings.maxGenPrefKey) == null
+                        ? "5000"
+                        : prefs.getInt(Strings.maxGenPrefKey).toString();
+                    String toleratedConflicts =
+                        prefs.getInt(Strings.toleratedConflictPrefKey) == null
+                            ? "0"
+                            : prefs
+                                .getInt(Strings.toleratedConflictPrefKey)
+                                .toString();
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: Form(
+                            key: _algoSettingFormKey,
+                            child: Column(
+                              children: [
+                                ...algoSettingDialogForm(
+                                  chromCount,
+                                  maxGen,
+                                  toleratedConflicts,
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    await saveAlgoSetting();
+                                  },
+                                  child: const Text("Save"),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: const Text("Algorithm Configuration"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
                     EasyLoading.show(status: "Loading from last saved");
                     await loadGeneratedTimetable();
                   },
@@ -845,10 +980,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 ),
                 generatedTimetable
                     ? ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           EasyLoading.show(status: "Optimizing...");
 
-                          optimizeTimetable();
+                          await optimizeTimetable();
                         },
                         child: const Text("Optimize table"),
                       )
